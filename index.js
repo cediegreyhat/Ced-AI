@@ -75,10 +75,10 @@ async function generateResponse(message) {
     const response = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt: message,
-      maxTokens: 65,
+      maxTokens: 150,
       temperature: 0.2,
       n: 1,
-      stop: ['\n']
+      stop: [" Human:", " AI:"],
     });
     return response.data.choices[0].text.trim();
   } catch (error) {
