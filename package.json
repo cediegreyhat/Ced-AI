@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "A chatbot using Dialogflow and OpenAI",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
+"scripts": {
+  "start": "node index.js",
+  "dev": "nodemon index.js"
+},
   "author": "Cediegreyhat",
   "license": "ISC",
   "dependencies": {

@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const config = require("./config");
 const app = express().use(bodyParser.json());
 
-// Create the endpoint for webhook
+// Create the endpoint for your webhook
 app.post("/webhook", (req, res) => {
   let body = req.body;
 
