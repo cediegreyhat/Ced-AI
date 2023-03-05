@@ -1,0 +1,20 @@
+{
+  "name": "RikuAI",
+  "version": "1.0.0",
+  "description": "A chatbot using Dialogflow and OpenAI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Cediegreyhat",
+  "license": "ISC",
+  "dependencies": {
+    "dialogflow-fulfillment": "^0.6.1",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "openai": "^3.0.0",
+    "uuid": "^8.3.2",
+    "facebook-chat-api": "^1.8.0"
+     
+  }
+}
