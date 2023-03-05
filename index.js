@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
+const { Configuration, OpenAIApi } = require('openai');
 
 require('dotenv').config();
 
@@ -64,17 +65,20 @@ app.get('/webhook', (req, res) => {
 });
 
 // Generate response using OpenAI's GPT-3 API
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
 async function generateResponse(message) {
   try {
-    const response = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
+    const response = await openai.createCompletion({
+      model: 'text-davinci-003',
       prompt: message,
-      max_tokens: 50,
+      maxTokens: 256,
       temperature: 0.5,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      }
+      n: 1,
+      stop: ['\n']
     });
     return response.data.choices[0].text.trim();
   } catch (error) {
