@@ -75,8 +75,8 @@ async function generateResponse(message) {
     const response = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt: message,
-      maxTokens: 256,
-      temperature: 0.5,
+      maxTokens: 65,
+      temperature: 0.6,
       n: 1,
       stop: ['\n']
     });
