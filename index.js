@@ -104,4 +104,5 @@ async function sendResponse(recipientId, response) {
   }
 }
 
+// Start the server
 app.listen(process.env.PORT || 3000, () => console.log('Webhook is listening!'));
