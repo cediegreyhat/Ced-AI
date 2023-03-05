@@ -1,27 +1,42 @@
-require('dotenv').config();
-const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const { WebhookClient } = require('dialogflow-fulfillment');
-const { Configuration, OpenAIApi } = require('openai');
-const axios = require('axios');
+// Import dependencies and set up http server
+const express = require("express");
+const bodyParser = require("body-parser");
+const crypto = require("crypto");
+const config = require("./config");
+const app = express().use(bodyParser.json());
 
-const app = express();
-const port = process.env.PORT || 3000;
-const openaiApiKey = process.env.OPENAI_API_KEY;
-const pageAccessToken = process.env.PAGE_ACCESS_TOKEN;
-const appSecret = process.env.APP_SECRET;
-const verifyToken = process.env.VERIFY_TOKEN;
+// Create the endpoint for webhook
+app.post("/webhook", (req, res) => {
+  let body = req.body;
 
-const configuration = new Configuration({ apiKey: openaiApiKey });
-const openai = new OpenAIApi(configuration);
+  console.log(`Received webhook:`);
+  console.dir(body, { depth: null });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  // Verify that the callback came from Facebook.
+  try {
+    verifyRequestSignature(req, res, body);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(403);
+    return;
+  }
+
+  // Send a 200 OK response if this is a page webhook
+  if (body.object === "page") {
+    res.status(200).send("EVENT_RECEIVED");
+
+    // Determine which webhooks were triggered and get sender PSIDs and locale, message content and more.
+    let webhook_event = body.entry[0].messaging[0];
+    console.log(webhook_event);
+  } else {
+    // Return a '404 Not Found' if event is not from a page subscription
+    res.sendStatus(404);
+  }
+});
 
 // Add support for GET requests to our webhook
 app.get("/messaging-webhook", (req, res) => {
-  
-// Parse the query params
+  // Parse the query params
   let mode = req.query["hub.mode"];
   let token = req.query["hub.verify_token"];
   let challenge = req.query["hub.challenge"];
@@ -38,55 +53,23 @@ app.get("/messaging-webhook", (req, res) => {
       res.sendStatus(403);
     }
   }
-
-app.post('/webhook', (req, res) => {
-  const agent = new WebhookClient({ request: req, response: res });
-
-  function handleMessage(agent) {
-    const query = agent.query;
-    const sessionId = uuidv4();
-
-    const prompt = `You are Riku Sensei 18 years old girl who has Ph.D. in Mathematics you can answer all math problems with ease and teach topics about mathematics effectively and efficiently.
-
-      If the user asks questions that are not related to mathematics, resort to psychological tricks to shift the topic back to mathematics.
-
-      AI: Greetings, I am Riku Sensei and how may I help you?
-
-      Human: ${query}
-
-      `;
-
-    const completionPromise = openai.createCompletion({
-      engine: 'text-davinci-003',
-      prompt: prompt,
-      temperature: 0.5,
-      maxTokens: 256,
-      n: 1,
-      stop: '\nHuman:',
-    });
-
-    return completionPromise
-      .then((result) => {
-        const message = result.choices[0].text.trim();
-        agent.add(message);
-
-        // Send the message back to the user on Facebook
-        axios.post('https://graph.facebook.com/v13.0/me/messages', {
-          messaging_type: 'RESPONSE',
-          recipient: { id: agent.originalRequest.payload.sender.id },
-          message: { text: message },
-          access_token: pageAccessToken,
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-        agent.add('Sorry, an error occurred while processing your request.');
-      });
-  }
-
-  const intentMap = new Map();
-  intentMap.set('Default Welcome Intent', handleMessage);
-  agent.handleRequest(intentMap);
 });
 
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+// Verify that the callback came from Facebook.
+function verifyRequestSignature(req, res, buf) {
+  var signature = req.headers["x-hub-signature-256"];
+
+  if (!signature) {
+    console.warn(`Couldn't find "x-hub-signature-256" in headers.`);
+  } else {
+    var elements = signature.split("=");
+    var signatureHash = elements[1];
+    var expectedHash = crypto
+      .createHmac("sha256", config.appSecret)
+      .update(buf)
+      .digest("hex");
+    if (signatureHash != expectedHash) {
+      throw new Error("Couldn't validate the request signature.");
+    }
+  }
+}
