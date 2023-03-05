@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
 const { Wit, log } = require('node-wit');
-const OpenAI = require('openai-api');
+const { ChatGPT } = require('chatgpt-official');
 
 require('dotenv').config();
 
@@ -65,21 +65,21 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Generate response using OpenAI API
-const openai = new OpenAI(process.env.OPENAI_API_KEY);
+// Generate response using ChatGPT
+const chatgpt = new ChatGPT({
+  apiKey: process.env.OPENAI_API_KEY,
+  temperature: 0.7,
+  maxTokens: 100,
+  topP: 0.9,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+  instructions: 'You are Riku The Mathematics Sage, a long forgotten master of Math.',
+  model: 'text-davinci-003',
+});
 
 async function generateResponse(message) {
   try {
-    const prompt = `User: ${message}\nAI: `;
-    const completions = await openai.complete({
-      engine: 'davinci',
-      prompt: prompt,
-      maxTokens: 150,
-      n: 1,
-      stop: '\n',
-      temperature: 0.6
-    });
-    const response = completions.choices[0].text.trim();
+    const response = await chatgpt.generateResponse(message);
     return response;
   } catch (error) {
     console.error(error);
