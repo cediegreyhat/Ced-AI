@@ -25,6 +25,102 @@ function verifyRequestSignature(req, res, buf) {
   }
 }
 
+// Define a global variable to store conversation state
+let conversationState = {};
+
+// Webhook for receiving messages from Facebook Messenger
+app.post('/webhook', async (req, res) => {
+  const { object, entry } = req.body;
+
+  if (object === 'page') {
+    entry.forEach(async (entry) => {
+      const { messaging } = entry;
+      messaging.forEach(async (message) => {
+        if (message.message && !message.message.is_echo) {
+          // Get user message and conversation state
+          const userMessage = message.message.text;
+          const { sender } = message;
+          const sessionId = sender.id;
+          const state = conversationState[sessionId] || {};
+
+          // Generate response based on conversation state
+          const response = await generateResponse(userMessage, state);
+
+          // Update conversation state
+          conversationState[sessionId] = response.state;
+
+          // Send response back to user via Facebook Messenger API
+          await sendResponse(sender.id, response.text);
+        }
+      });
+    });
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+// Generate response using OpenAI's GPT-3 API
+async function generateResponse(userMessage, state) {
+  try {
+    // Build prompt based on conversation state and user message
+    const prompt = buildPrompt(userMessage, state);
+
+    // Call OpenAI API to generate response
+    const response = await openai.createCompletion({
+      model: 'text-davinci-003',
+      prompt,
+      maxTokens: 150,
+      temperature: 0.2,
+      n: 1,
+      stop: [" Human:", " AI:"],
+    });
+
+    // Parse response and extract conversation state
+    const text = response.data.choices[0].text.trim();
+    const nextState = parseResponse(text);
+
+    // Merge conversation state and return response
+    return {
+      text,
+      state: { ...state, ...nextState }
+    };
+  } catch (error) {
+    console.error(error);
+    return { text: 'Oops, something went wrong!', state };
+  }
+}
+
+// Build prompt based on conversation state and user message
+function buildPrompt(userMessage, state) {
+  // Add user message to prompt
+  let prompt = userMessage;
+
+  // Add conversation state to prompt
+  Object.entries(state).forEach(([key, value]) => {
+    prompt += `\n${key}: ${value}`;
+  });
+
+  return prompt;
+}
+
+// Parse response and extract conversation state
+function parseResponse(text) {
+  const state = {};
+
+  // Extract conversation state from response
+  const matches = text.match(/\w+: \w+/g);
+  if (matches) {
+    matches.forEach((match) => {
+      const [key, value] = match.split(': ');
+      state[key] = value;
+    });
+  }
+
+  return state;
+}
+
+
 // Use the body-parser middleware and verify request signature
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
