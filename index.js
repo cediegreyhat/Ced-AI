@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { Configuration, OpenAIApi } = require('openai');
+const { Wit, log } = require('node-wit');
 
 require('dotenv').config();
 
@@ -37,7 +37,7 @@ app.post('/webhook', async (req, res) => {
       const { messaging } = entry;
       messaging.forEach(async (message) => {
         if (message.message && !message.message.is_echo) {
-          // Get user message and send it to GPT-3 for a response
+          // Get user message and send it to Wit.ai for processing
           const response = await generateResponse(message.message.text);
           // Send response back to user via Facebook Messenger API
           await sendResponse(message.sender.id, response);
@@ -64,23 +64,22 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Generate response using OpenAI's GPT-3 API
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+// Generate response using Wit.ai API
+const wit = new Wit({
+  accessToken: process.env.WITAI_ACCESS_TOKEN,
+  logger: new log.Logger(log.DEBUG)
 });
-const openai = new OpenAIApi(configuration);
 
 async function generateResponse(message) {
   try {
-    const response = await openai.createCompletion({
-      model: 'text-davinci-003',
-      prompt: message,
-      maxTokens: 150,
-      temperature: 0.5,
-      n: 1,
-      stop: [" Human:", " AI:"],
-    });
-    return response.data.choices[0].text.trim();
+    const { entities } = await wit.message(message);
+    if (entities.math_expression) {
+      // Handle math expression
+      return `The result of ${entities.math_expression[0].value} is ${eval(entities.math_expression[0].value)}`;
+    } else {
+      // Handle non-math expression
+      return 'I am sorry, I did not understand your message.';
+    }
   } catch (error) {
     console.error(error);
     return 'Oops, something went wrong!';
