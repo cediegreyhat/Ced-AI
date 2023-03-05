@@ -66,20 +66,14 @@ app.get('/webhook', (req, res) => {
 });
 
 // Generate response using ChatGPT
-const chatgpt = new ChatGPT({
+const chatGPT = new ChatGPT({
   apiKey: process.env.OPENAI_API_KEY,
-  temperature: 0.7,
-  maxTokens: 100,
-  topP: 0.9,
-  frequencyPenalty: 0,
-  presencePenalty: 0,
-  instructions: 'You are Riku The Mathematics Sage, a long forgotten master of Math.',
-  model: 'text-davinci-003',
+  model: 'davinci'
 });
 
 async function generateResponse(message) {
   try {
-    const response = await chatgpt.generateResponse(message);
+    const response = await chatGPT.generateResponse(message);
     return response;
   } catch (error) {
     console.error(error);
