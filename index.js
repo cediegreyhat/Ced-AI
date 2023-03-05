@@ -2,106 +2,101 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { Configuration, OpenAIApi } = require('openai');
-
 require('dotenv').config();
+const { verifyRequestSignature } = require('./helpers');
+const Configs = require('./Configs');
 
 const app = express();
+app.use(bodyParser.json());
 
-// Verify that the incoming request is from Facebook
-function verifyRequestSignature(req, res, buf) {
-  const signature = req.headers['x-hub-signature'];
-  if (!signature) {
-    throw new Error('Could not validate the signature.');
-  } else {
-    const elements = signature.split('=');
-    const signatureHash = elements[1];
-    const expectedHash = crypto.createHmac('sha1', process.env.APP_SECRET)
-      .update(buf)
-      .digest('hex');
-    if (signatureHash !== expectedHash) {
-      throw new Error('Could not validate the request signature.');
-    }
-  }
-}
+const openaiClient = Configs.openaiClient;
 
-// Use the body-parser middleware and verify request signature
-app.use(bodyParser.json({ verify: verifyRequestSignature }));
-
-// Webhook for receiving messages from Facebook Messenger
-app.post('/webhook', async (req, res) => {
-  const { object, entry } = req.body;
-
-  if (object === 'page') {
-    entry.forEach(async (entry) => {
-      const { messaging } = entry;
-      messaging.forEach(async (message) => {
-        if (message.message && !message.message.is_echo) {
-          // Get user message and send it to GPT-3 for a response
-          const response = await generateResponse(message.message.text);
-          // Send response back to user via Facebook Messenger API
-          await sendResponse(message.sender.id, response);
-        }
-      });
-    });
-    res.sendStatus(200);
-  } else {
-    res.sendStatus(404);
-  }
+app.get('/', (req, res) => {
+  res.send('Hello World!');
 });
 
-// Verify webhook token with Facebook
-app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
+app.get('/api/ai', (req, res) => {
+  const question = req.query.q;
 
-  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-    console.log('Webhook verified!');
-    res.status(200).send(challenge);
+  openaiClient.complete({
+    engine: 'text-davinci-002',
+    prompt: question,
+    maxTokens: 150,
+    n: 1,
+    stop: '\n',
+  })
+    .then((response) => {
+      const answer = response.data.choices[0].text.trim();
+      res.json({ answer });
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({ error });
+    });
+});
+
+app.get('/webhook', (req, res) => {
+  if (
+    req.query['hub.mode'] === 'subscribe' &&
+    req.query['hub.verify_token'] === Configs.fbVerifyToken
+  ) {
+    console.log('Validating webhook');
+    res.status(200).send(req.query['hub.challenge']);
   } else {
+    console.error('Failed validation. Make sure the validation tokens match.');
     res.sendStatus(403);
   }
 });
 
-// Generate response using OpenAI's GPT-3 API
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+app.post('/webhook', (req, res) => {
+  const data = req.body;
+
+  if (!verifyRequestSignature(req.headers['x-hub-signature'], data)) {
+    res.sendStatus(400);
+    return;
+  }
+
+  if (data.object === 'page') {
+    data.entry.forEach((entry) => {
+      entry.messaging.forEach((event) => {
+        if (event.message) {
+          const message = event.message.text;
+          console.log(`Received message: ${message}`);
+
+          openaiClient.complete({
+            engine: 'text-davinci-003',
+            prompt: message,
+            maxTokens: 150,
+            n: 1,
+            stop: '\n',
+          })
+            .then((response) => {
+              const answer = response.data.choices[0].text.trim();
+              console.log(`Answer: ${answer}`);
+              const senderId = event.sender.id;
+              const body = {
+                recipient: { id: senderId },
+                message: { text: answer },
+              };
+              axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${Configs.fbAccessToken}`, body)
+                .then(() => {
+                  console.log('Message sent');
+                })
+                .catch((error) => {
+                  console.log(error);
+                });
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+        }
+      });
+    });
+  }
+
+  res.sendStatus(200);
 });
-const openai = new OpenAIApi(configuration);
 
-async function generateResponse(message) {
-  try {
-    const response = await openai.createCompletion({
-      model: 'text-davinci-003',
-      prompt: message,
-      maxTokens: 150,
-      temperature: 0.5,
-      n: 1,
-      stop: [" Human:", " AI:"],
-    });
-    return response.data.choices[0].text.trim();
-  } catch (error) {
-    console.error(error);
-    return 'Oops, something went wrong!';
-  }
-}
-
-// Send response back to user via Facebook Messenger API
-async function sendResponse(recipientId, response) {
-  try {
-    await axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
-      messaging_type: 'RESPONSE',
-      recipient: {
-        id: recipientId
-      },
-      message: {
-        text: response
-      }
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-app.listen(process.env.PORT || 3000, () => console.log('Webhook is listening!'));
+const server = app.listen(Configs.port, () => {
+  console.log(`Listening on port ${Configs.port}`);
+});
