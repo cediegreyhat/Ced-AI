@@ -1,8 +1,11 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const app = express();
-const crypto = require('crypto');
+const express = require('express');
+const bodyParser = require('body-parser');
+const axios = require('axios');
+require('dotenv').config();
 
+const app = express();
+
+// Verify that the incoming request is from Facebook
 function verifyRequestSignature(req, res, buf) {
   const signature = req.headers['x-hub-signature'];
   if (!signature) {
@@ -19,57 +22,80 @@ function verifyRequestSignature(req, res, buf) {
   }
 }
 
-module.exports = {
-  verifyRequestSignature,
-};
-
-
-// Use the body-parser middleware
+// Use the body-parser middleware and verify request signature
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
-app.post("/webhook", (req, res) => {
-  // Use the parsed body here
-  const body = req.body;
+// Webhook for receiving messages from Facebook Messenger
+app.post('/webhook', async (req, res) => {
+  const { object, entry } = req.body;
 
-  // Check that the body is a webhook event
-  if (body.object === "page") {
-    // Iterate over each entry
-    body.entry.forEach(entry => {
-      // Iterate over each messaging event
-      entry.messaging.forEach(event => {
-        console.log(event);
+  if (object === 'page') {
+    entry.forEach(async (entry) => {
+      const { messaging } = entry;
+      messaging.forEach(async (message) => {
+        if (message.message && !message.message.is_echo) {
+          // Get user message and send it to GPT-3 for a response
+          const response = await generateResponse(message.message.text);
+          // Send response back to user via Facebook Messenger API
+          await sendResponse(message.sender.id, response);
+        }
       });
     });
-    // Return a '200 OK' response to all events
-    res.status(200).send("EVENT_RECEIVED");
+    res.sendStatus(200);
   } else {
-    // Return a '404 Not Found' if event is not from a page subscription
     res.sendStatus(404);
   }
 });
 
-app.get("/webhook", (req, res) => {
-  // Your verify token. Should be a random string.
-  const VERIFY_TOKEN = "YOUR_VERIFY_TOKEN";
+// Verify webhook token with Facebook
+app.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
 
-  // Parse the query params
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-
-  // Check if a token and mode is in the query string of the request
-  if (mode && token) {
-    // Check the mode and token sent are correct
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      // Respond with the challenge token from the request
-      console.log("WEBHOOK_VERIFIED");
-      res.status(200).send(challenge);
-    } else {
-      // Respond with '403 Forbidden' if verify tokens do not match
-      res.sendStatus(403);
-    }
+  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+    console.log('Webhook verified!');
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
   }
 });
 
-app.listen(process.env.PORT || 3000, () => console.log("Webhook is listening"));
+// Generate response using OpenAI's GPT-3 API
+async function generateResponse(message) {
+  try {
+    const response = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
+      prompt: message,
+      max_tokens: 50,
+      temperature: 0.5,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      }
+    });
+    return response.data.choices[0].text.trim();
+  } catch (error) {
+    console.error(error);
+    return 'Oops, something went wrong!';
+  }
+}
 
+// Send response back to user via Facebook Messenger API
+async function sendResponse(recipientId, response) {
+  try {
+    await axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+      messaging_type: 'RESPONSE',
+      recipient: {
+        id: recipientId
+      },
+      message: {
+        text: response
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+app.listen(process.env.PORT || 3000, () => console.log('Webhook is listening!'));
