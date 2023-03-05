@@ -76,7 +76,7 @@ async function generateResponse(message) {
       model: 'text-davinci-003',
       prompt: message,
       maxTokens: 65,
-      temperature: 0.6,
+      temperature: 0.2,
       n: 1,
       stop: ['\n']
     });
