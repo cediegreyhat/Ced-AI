@@ -1,9 +1,28 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
+const crypto = require('crypto');
 
-// Import your verifyRequestSignature function
-const { verifyRequestSignature } = require("./helpers");
+function verifyRequestSignature(req, res, buf) {
+  const signature = req.headers['x-hub-signature'];
+  if (!signature) {
+    throw new Error('Could not validate the signature.');
+  } else {
+    const elements = signature.split('=');
+    const signatureHash = elements[1];
+    const expectedHash = crypto.createHmac('sha1', process.env.APP_SECRET)
+      .update(buf)
+      .digest('hex');
+    if (signatureHash !== expectedHash) {
+      throw new Error('Could not validate the request signature.');
+    }
+  }
+}
+
+module.exports = {
+  verifyRequestSignature,
+};
+
 
 // Use the body-parser middleware
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
