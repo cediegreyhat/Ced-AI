@@ -56,11 +56,20 @@ app.get("/messaging-webhook", (req, res) => {
 });
 
 //Server Listener
-app.listen(3000, () => {
-  console.log("Server listening on port 3000");
-}).catch(err => {
-  console.error(`Error starting server: ${err}`);
-});
+const port = process.env.PORT || 3000;
+
+async function startServer() {
+  try {
+    await app.listen(port);
+    console.log(`Server listening on port ${port}`);
+  } catch (err) {
+    console.error(`Error starting server: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+startServer();
+
 
 // Verify that the callback came from Facebook.
 function verifyRequestSignature(req, res, buf) {
