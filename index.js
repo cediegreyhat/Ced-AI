@@ -65,9 +65,7 @@ app.get('/webhook', (req, res) => {
 
 // Generate response using OpenAI's GPT-3 API
 const openaiApiKey = process.env.OPENAI_API_KEY;
-const openai = require('openai');
 const openaiClient = new openai.OpenAI({ apiKey: openaiApiKey });
-
 
 async function generateResponse(message) {
   try {
