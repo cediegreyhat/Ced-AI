@@ -55,6 +55,13 @@ app.get("/messaging-webhook", (req, res) => {
   }
 });
 
+//Server Listener
+app.listen(3000, () => {
+  console.log("Server listening on port 3000");
+}).catch(err => {
+  console.error(`Error starting server: ${err}`);
+});
+
 // Verify that the callback came from Facebook.
 function verifyRequestSignature(req, res, buf) {
   var signature = req.headers["x-hub-signature-256"];
