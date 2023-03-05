@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { Wit, log } = require('node-wit');
 const { ChatGPT } = require('chatgpt-official');
 
 require('dotenv').config();
@@ -39,7 +38,7 @@ app.post('/webhook', async (req, res) => {
       messaging.forEach(async (message) => {
         if (message.message && !message.message.is_echo) {
           // Get user message and send it to ChatGPT for processing
-          const response = await generateResponse(message.message.text);
+          const response = await chatGPT.generateResponse(message.message.text);
           // Send response back to user via Facebook Messenger API
           await sendResponse(message.sender.id, response);
         }
