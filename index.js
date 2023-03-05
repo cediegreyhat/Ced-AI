@@ -2,7 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const openai = require('openai');
+const { Configuration, OpenAIApi } = require('openai');
+
 require('dotenv').config();
 
 const app = express();
@@ -32,17 +33,17 @@ app.post('/webhook', async (req, res) => {
   const { object, entry } = req.body;
 
   if (object === 'page') {
-    for (const entryItem of entry) {
-      const { messaging } = entryItem;
-      for (const message of messaging) {
+    entry.forEach(async (entry) => {
+      const { messaging } = entry;
+      messaging.forEach(async (message) => {
         if (message.message && !message.message.is_echo) {
           // Get user message and send it to GPT-3 for a response
           const response = await generateResponse(message.message.text);
           // Send response back to user via Facebook Messenger API
           await sendResponse(message.sender.id, response);
         }
-      }
-    }
+      });
+    });
     res.sendStatus(200);
   } else {
     res.sendStatus(404);
@@ -64,13 +65,15 @@ app.get('/webhook', (req, res) => {
 });
 
 // Generate response using OpenAI's GPT-3 API
-const openaiApiKey = process.env.OPENAI_API_KEY;
-const openaiClient = new openai.OpenAI({ apiKey: openaiApiKey });
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 async function generateResponse(message) {
   try {
-    const response = await openaiClient.complete({
-      engine: 'davinci',
+    const response = await openai.createCompletion({
+      model: 'text-davinci-003',
       prompt: message,
       maxTokens: 150,
       temperature: 0.5,

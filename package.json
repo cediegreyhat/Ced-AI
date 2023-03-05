@@ -1,19 +1,24 @@
 {
   "name": "Riku-AI",
   "version": "1.0.0",
-  "description": "Facebook Messenger chatbot using OpenAI's GPT-3 API",
+  "description": "A chatbot using Dialogflow and OpenAI",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "author": "Your Name",
-  "license": "MIT",
+"scripts": {
+  "start": "node index.js",
+  "dev": "nodemon index.js"
+},
+  "author": "Cediegreyhat",
+  "license": "ISC",
   "dependencies": {
-    "axios": "^0.24.0",
-    "body-parser": "^1.19.0",
-    "crypto": "^1.0.1",
+    "dialogflow-fulfillment": "^0.6.1",
     "dotenv": "^16.0.0",
-    "express": "^4.17.2",
-    "openai": "^3.0.0"
+    "express": "^4.17.3",
+    "openai": "^3.0.0",
+    "uuid": "^8.3.2",
+     "body-parser": "^1.19.0",
+    "facebook-chat-api": "^1.8.0",
+    "request": "^2.88.2",
+    "crypto": "^1.0.1"
+     
   }
 }
