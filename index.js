@@ -68,9 +68,32 @@ app.get('/webhook', (req, res) => {
 // Generate response using ChatGPT API
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
+async function generateResponse(prompt) {
+  try {
+    const response = await openai.complete({
+      engine: config.engine,
+      prompt,
+      maxTokens: config.maxTokens,
+      n: config.n,
+      temperature: config.temperature,
+      frequencyPenalty: config.frequencyPenalty,
+      presencePenalty: config.presencePenalty,
+    });
+
+    if (response.data.choices && response.data.choices.length > 0) {
+      const text = response.data.choices[0].text.trim();
+      return text;
+    } else {
+      throw new Error("Failed to generate response.");
+    }
+  } catch (err) {
+    console.error(err);
+    return "Oops, something went wrong!";
+  }
+}
+
 async function generateResponse(message) {
   try {
-    // Generate response using the ChatGPT API
     const prompt = `User: ${message}\nAI: `;
     const completions = await openai.complete({
       engine: 'davinci',
@@ -78,7 +101,7 @@ async function generateResponse(message) {
       maxTokens: 150,
       n: 1,
       stop: '\n',
-      temperature: 0.7
+      temperature: 0.6
     });
     const response = completions.choices[0].text.trim();
     return response;
