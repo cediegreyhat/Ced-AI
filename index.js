@@ -2,8 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { OpenAI } = require('openai');
-
+const openai = require('openai');
 require('dotenv').config();
 
 const app = express();
@@ -64,12 +63,13 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Generate response using OpenAI npm module
-const openai = new OpenAI(process.env.OPENAI_API_KEY);
+// Generate response using OpenAI's GPT-3 API
+const openaiApiKey = process.env.OPENAI_API_KEY;
+const openaiClient = new openai({ apiKey: openaiApiKey });
 
 async function generateResponse(message) {
   try {
-    const response = await openai.complete({
+    const response = await openaiClient.complete({
       engine: 'davinci',
       prompt: message,
       maxTokens: 150,
@@ -77,7 +77,7 @@ async function generateResponse(message) {
       n: 1,
       stop: [" Human:", " AI:"],
     });
-    return response.choices[0].text.trim();
+    return response.data.choices[0].text.trim();
   } catch (error) {
     console.error(error);
     return 'Oops, something went wrong!';
