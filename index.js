@@ -32,17 +32,17 @@ app.post('/webhook', async (req, res) => {
   const { object, entry } = req.body;
 
   if (object === 'page') {
-    entry.forEach(async (entry) => {
-      const { messaging } = entry;
-      messaging.forEach(async (message) => {
+    for (const entryItem of entry) {
+      const { messaging } = entryItem;
+      for (const message of messaging) {
         if (message.message && !message.message.is_echo) {
           // Get user message and send it to GPT-3 for a response
           const response = await generateResponse(message.message.text);
           // Send response back to user via Facebook Messenger API
           await sendResponse(message.sender.id, response);
         }
-      });
-    });
+      }
+    }
     res.sendStatus(200);
   } else {
     res.sendStatus(404);
