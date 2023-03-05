@@ -18,20 +18,26 @@ const openai = new OpenAIApi(configuration);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Webhook for Facebook pages
-app.get('/webhook', (req, res) => {
-  // Extract the query parameters
-  const { mode, challenge, verify_token } = req.query;
+// Add support for GET requests to our webhook
+app.get("/messaging-webhook", (req, res) => {
+  
+// Parse the query params
+  let mode = req.query["hub.mode"];
+  let token = req.query["hub.verify_token"];
+  let challenge = req.query["hub.challenge"];
 
-  // Check if the mode is "subscribe" and the verify token matches
-  if (mode === 'subscribe' && verify_token === verifyToken) {
-    // Respond with the challenge token
-    res.status(200).send(challenge);
-  } else {
-    // Return a 403 Forbidden error
-    res.sendStatus(403);
+  // Check if a token and mode is in the query string of the request
+  if (mode && token) {
+    // Check the mode and token sent is correct
+    if (mode === "subscribe" && token === config.verifyToken) {
+      // Respond with the challenge token from the request
+      console.log("WEBHOOK_VERIFIED");
+      res.status(200).send(challenge);
+    } else {
+      // Respond with '403 Forbidden' if verify tokens do not match
+      res.sendStatus(403);
+    }
   }
-});
 
 app.post('/webhook', (req, res) => {
   const agent = new WebhookClient({ request: req, response: res });
