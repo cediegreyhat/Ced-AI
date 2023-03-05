@@ -18,7 +18,7 @@
      "body-parser": "^1.20.2",
     "facebook-chat-api": "^1.8.0",
     "request": "^2.88.2",
-    "crypto": "^4.1.1"
+    "crypto": "^1.0.1"
      
   }
 }
