@@ -64,6 +64,10 @@ app.get('/webhook', (req, res) => {
   }
 });
 
+
+// Import ChatGPTUnofficialProxyAPI dynamically to avoid ERR_REQUIRE_ESM error
+const { ChatGPTUnofficialProxyAPI } = await import('chatgpt');
+
 // Generate response using ChatGPTUnofficialProxyAPI
 const api = new ChatGPTUnofficialProxyAPI({
   accessToken: process.env.OPENAI_ACCESS_TOKEN,
