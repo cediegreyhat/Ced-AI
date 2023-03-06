@@ -81,8 +81,14 @@ async function generateResponse(message) {
   });
 
   try {
-    const res = await api.sendMessage(message);
-    const responseText = res.choices[0].text;
+    const apiResponse = await api.sendMessage(message);
+    const responseText = apiResponse.choices[0].text.trim();
+
+    if (!responseText) {
+      console.log('Empty response from ChatGPTAPI.');
+      return 'Oops, something went wrong!';
+    }
+
     console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
@@ -90,7 +96,6 @@ async function generateResponse(message) {
     return 'Oops, something went wrong!';
   }
 }
-
 
 
 // Send response back to user via Facebook Messenger API
