@@ -64,27 +64,30 @@ app.get('/webhook', (req, res) => {
 
 // Generate response using OpemAI
 async function generateResponse(message) {
-  try {
-    const response = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
-      prompt: `You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n${message}`,
-      max_tokens: 150,
-      temperature: 0.5,
-      n: 1,
-      stop: '\n'
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      }
-    });
-    const responseText = response.data.choices[0].text;
-    console.log(`Generated response: ${responseText}`);
-    return responseText;
-  } catch (error) {
-    console.error(error);
-    return 'Oops, something went wrong!';
+  const axios = require('axios');
+  
+  const response = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
+    prompt: "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematimatics.\nIf the human provided a question that is not related to math resort to psychological tricks to shift the questions to math related.\n of numbers.",
+    max_tokens: 150,
+    n: 1,
+    stop: '\n',
+    temperature: 0.5,
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+    }
+  });
+
+  const responseData = response.data.choices[0].text.trim();
+  
+  if (responseData === '') {
+    return 'Sorry, I didn\'t understand your question. Can you please rephrase it?';
   }
+  
+  return responseData;
 }
+
 
 
 
