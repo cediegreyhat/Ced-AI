@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
 require('dotenv').config();
+const openai = require('@openai/api');
 
 const app = express();
 
@@ -63,19 +64,16 @@ app.get('/webhook', (req, res) => {
 });
 
 async function generateResponse(message) {
-  const openai = require('openai');
   const { OPENAI_API_KEY } = process.env;
 
-  const api = new openai.OpenAI(OPENAI_API_KEY);
+  const api = new openai.default(OPENAI_API_KEY);
 
   const prompt = "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n";
-  const completions = await api.complete({
-  model: "text-davinci-003",
-  temperature: 0.7,
-  max_tokens: 256,
-  top_p: 1,
-  frequency_penalty: 0,
-  presence_penalty: 0,
+  const completions = await api.completions.create({
+    engine: "text-davinci-003",
+    prompt,
+    maxTokens: 256,
+    n: 1,
     stop: ['\n']
   });
   const responseText = completions.choices[0].text.trim();
