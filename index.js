@@ -62,33 +62,22 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Generate response using ChatGPTAPI
+// Generate response using OpemAI
 async function generateResponse(message) {
-  const { ChatGPTAPI } = await import('chatgpt');
-
-  const api = new ChatGPTAPI({
-    apiUrl: 'https://api.openai.com/v1/completions',
-    apiKey: process.env.OPENAI_API_KEY,
-    model: 'text-davinci-003',
-    prompt: "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n",
-    completionParams: {
-      temperature: 0.5,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-      stop: ['\n']
-    }
-  });
-
   try {
-    const apiResponse = await api.sendMessage(message);
-    const responseText = apiResponse.choices[0].text.trim();
-
-    if (!responseText) {
-      console.log('Empty response from ChatGPTAPI.');
-      return 'Oops, something went wrong!';
-    }
-
+    const response = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
+      prompt: `You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n${message}`,
+      max_tokens: 150,
+      temperature: 0.5,
+      n: 1,
+      stop: '\n'
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      }
+    });
+    const responseText = response.data.choices[0].text;
     console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
@@ -96,6 +85,7 @@ async function generateResponse(message) {
     return 'Oops, something went wrong!';
   }
 }
+
 
 
 // Send response back to user via Facebook Messenger API
