@@ -2,16 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { ChatGPTAuthTokenService } = require('chat-gpt-authenticator');
+const { ChatGPTAPI } = require('chat-gpt');
 require('dotenv').config();
 
 const app = express();
-
-// Instantiate ChatGPTAuthTokenService to get access token dynamically
-const chatGptAuthTokenService = new ChatGPTAuthTokenService(
-  process.env.OPENAI_EMAIL,
-  process.env.OPENAI_PASSWORD
-);
 
 // Verify that the incoming request is from Facebook
 function verifyRequestSignature(req, res, buf) {
@@ -69,29 +63,25 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Generate response using ChatGPTUnofficialProxyAPI
+// Generate response using ChatGPTAPI
 async function generateResponse(message) {
-  // Import ChatGPTUnofficialProxyAPI dynamically to avoid ERR_REQUIRE_ESM error
-  const { ChatGPTUnofficialProxyAPI } = await import('chatgpt');
-
-  const accessToken = await chatGptAuthTokenService.getToken();
-  const api = new ChatGPTUnofficialProxyAPI({
-    accessToken,
-    model: 'text-davinci-003',
+  const api = new ChatGPTAPI({
+    apiKey: process.env.OPENAI_API_KEY,
+    prompt: message,
+    model: 'text-davinci-002',
     temperature: 0.5,
     maxTokens: 150,
     stop: ['\n']
   });
 
   try {
-    const res = await api.sendMessage(message);
-    return res.text;
+    const res = await api.generate();
+    return res.choices[0].text;
   } catch (error) {
     console.error(error);
     return 'Oops, something went wrong!';
   }
 }
-
 
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
