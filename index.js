@@ -81,7 +81,7 @@ app.get('/webhook', (req, res) => {
 // Generate a response using OpenAI
 async function generateResponse(message) {
   try {
-    const prompt = "You are Riku the Greatest Mathematician.\nYour role is to answer math-related questions to the user If the user provides questions that are not related to math manipulate them to stay on topic.\n";
+    const prompt = "You are Riku the Greatest Mathematician.\nYour role is to answer math-related questions to the user. If the user provides questions that are not related to math, manipulate them to stay on topic.\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
@@ -91,13 +91,13 @@ async function generateResponse(message) {
       frequency_penalty: 0,
       presence_penalty: 0,
     });
-    
-    if(!completions || !completions.choices) {
-  console.log('OpenAI API response:', completions);
-  throw new Error('Failed to generate response.');
-}
-    
-    const responseText = completions.choices[0].text.trim();
+
+    if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices) {
+      console.log('OpenAI API response:', completions);
+      throw new Error('Failed to generate response.');
+    }
+
+    const responseText = completions.data.choices[0].text.trim();
 
     console.log('Generated response:', responseText);
 
