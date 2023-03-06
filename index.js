@@ -68,7 +68,7 @@ async function generateResponse(message) {
   const api = new ChatGPTAPI({
     apiKey: process.env.OPENAI_API_KEY,
     prompt: message,
-    model: 'text-davinci-002',
+    model: 'gpt-3.5-turbo-0301',
     temperature: 0.5,
     maxTokens: 150,
     stop: ['\n']
