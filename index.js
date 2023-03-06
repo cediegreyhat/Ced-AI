@@ -83,12 +83,14 @@ async function generateResponse(message) {
   try {
     const res = await api.sendMessage(message);
     const responseText = res.choices[0].text;
+    console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
     console.error(error);
     return 'Oops, something went wrong!';
   }
 }
+
 
 
 // Send response back to user via Facebook Messenger API
