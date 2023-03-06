@@ -7,6 +7,8 @@ const { default: openai } = require('openai');
 
 const app = express();
 
+openai.apiKey = process.env.OPENAI_API_KEY;
+
 // Verify that the incoming request is from Facebook
 function verifyRequestSignature(req, res, buf) {
   const signature = req.headers['x-hub-signature'];
@@ -32,17 +34,17 @@ app.post('/webhook', async (req, res) => {
   const { object, entry } = req.body;
 
   if (object === 'page') {
-    entry.forEach(async (entry) => {
+    for (const entry of entry) {
       const { messaging } = entry;
-      messaging.forEach(async (message) => {
+      await Promise.all(messaging.map(async (message) => {
         if (message.message && !message.message.is_echo) {
           // Get user message and send it to ChatGPT for processing
           const response = await generateResponse(message.message.text);
           // Send response back to user via Facebook Messenger API
-          await sendResponse(message.sender.id, response);
+          sendResponse(message.sender.id, response);
         }
-      });
-    });
+      }));
+    }
     res.sendStatus(200);
   } else {
     res.sendStatus(404);
@@ -63,11 +65,8 @@ app.get('/webhook', (req, res) => {
   }
 });
 
+// Generate a response using OpenAI
 async function generateResponse(message) {
-  const { OPENAI_API_KEY } = process.env;
-
-  openai.apiKey = OPENAI_API_KEY;
-
   const prompt = "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n";
   const completions = await openai.completions.create({
     engine: "text-davinci-003",
