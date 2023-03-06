@@ -80,20 +80,12 @@ async function generateResponse(message) {
     }
   });
 
-  try {
-    let partialResponse = '';
-    const res = await api.sendMessage(message, {
-      onProgress: (response) => {
-        partialResponse += response.text;
-        console.log(partialResponse);
-      },
-    });
     return res.choices[0].text;
   } catch (error) {
     console.error(error);
     return 'Oops, something went wrong!';
   }
-}
+});
 
 
 // Send response back to user via Facebook Messenger API
