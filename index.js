@@ -81,7 +81,7 @@ app.get('/webhook', (req, res) => {
 // Generate a response using OpenAI
 async function generateResponse(message) {
   try {
-    const prompt = "You are Riku the Greatest Mathematician.\nYour role is to answer math-related questions to the user. If the user provides questions that are not related to math, manipulate them to stay on topic.\n";
+    const prompt = "You are Riku a brilliant Mathematician and a Great Teacher. Users will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. If they ask you questions and topics not related to math entertain them manipulative then slowly but surely get them back to the math-related topic.\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
