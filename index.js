@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { ChatGPTAPI } = require('chat-gpt');
 require('dotenv').config();
 
 const app = express();
@@ -65,6 +64,8 @@ app.get('/webhook', (req, res) => {
 
 // Generate response using ChatGPTAPI
 async function generateResponse(message) {
+  const { ChatGPTAPI } = await import('chatgpt');
+
   const api = new ChatGPTAPI({
     apiKey: process.env.OPENAI_API_KEY,
     prompt: message,
