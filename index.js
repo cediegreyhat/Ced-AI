@@ -66,10 +66,10 @@ app.get('/webhook', (req, res) => {
 async function generateResponse(message) {
   const { OPENAI_API_KEY } = process.env;
 
-  const api = new openai.default(OPENAI_API_KEY);
+  openai.apiKey = OPENAI_API_KEY;
 
   const prompt = "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n";
-  const completions = await api.completions.create({
+  const completions = await openai.completions.create({
     engine: "text-davinci-003",
     prompt,
     maxTokens: 256,
