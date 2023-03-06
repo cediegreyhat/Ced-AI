@@ -84,7 +84,7 @@ async function generateResponse(message) {
       prompt: prompt + message
     });
     
-    if (completions.choices.length === 0) {
+    if(!completions || !completions.choices) {
       throw new Error('Failed to generate response.');
     }
     
