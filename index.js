@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
 require('dotenv').config();
-const { default: openai } = require('openai');
+const openai = require('openai');
 
 const app = express();
 
