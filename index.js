@@ -2,8 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-require('dotenv').config();
 const openai = require('openai');
+require('dotenv').config();
 
 const app = express();
 
@@ -31,23 +31,28 @@ app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
-  const { object, entry: entries } = req.body;
+  try {
+    const { object, entry: entries } = req.body;
 
-  if (object === 'page') {
-    for (const entry of entries) {
-      const { messaging } = entry;
-      await Promise.all(messaging.map(async (message) => {
-        if (message.message && !message.message.is_echo) {
-          // Get user message and send it to ChatGPT for processing
-          const response = await generateResponse(message.message.text);
-          // Send response back to user via Facebook Messenger API
-          sendResponse(message.sender.id, response);
-        }
-      }));
+    if (object === 'page') {
+      for (const entry of entries) {
+        const { messaging } = entry;
+        await Promise.all(messaging.map(async (message) => {
+          if (message.message && !message.message.is_echo) {
+            // Get user message and send it to ChatGPT for processing
+            const response = await generateResponse(message.message.text);
+            // Send response back to user via Facebook Messenger API
+            await sendResponse(message.sender.id, response);
+          }
+        }));
+      }
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
     }
-    res.sendStatus(200);
-  } else {
-    res.sendStatus(404);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
   }
 });
 
@@ -67,19 +72,25 @@ app.get('/webhook', (req, res) => {
 
 // Generate a response using OpenAI
 async function generateResponse(message) {
-  const prompt = "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n";
-  const completions = await openai.completions.create({
-    engine: "text-davinci-003",
-    temperature: 0.4,
-    maxTokens: 256,
-    n: 1,
-    stop: ['\n']
-  });
-  const responseText = completions.choices[0].text.trim();
+  try {
+    const prompt = "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n";
+    const completions = await openai.completions.create({
+      engine: "text-davinci-003",
+      temperature: 0.4,
+      maxTokens: 256,
+      n: 1,
+      stop: ['\n'],
+      prompt: prompt + message
+    });
+    const responseText = completions.choices[0].text.trim();
 
-  console.log('Generated response:', responseText);
+    console.log('Generated response:', responseText);
 
-  return responseText;
+    return responseText;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to generate response.');
+  }
 }
 
 
