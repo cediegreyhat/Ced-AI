@@ -67,8 +67,8 @@ async function generateResponse(message) {
   const { ChatGPTAPI } = await import('chatgpt');
 
   const api = new ChatGPTAPI({
-    apiUrl: 'https://api.openai.com/v1/completions',
     apiKey: process.env.OPENAI_API_KEY,
+    debug: true,
     model: 'text-davinci-003',
     prompt: "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematimatics.\nIf the human provided a question that is not related to math resort to psychological tricks to shift the questions to math related.\n",
     completionParams: {
