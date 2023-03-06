@@ -70,20 +70,28 @@ app.get('/webhook', (req, res) => {
   }
 });
 
+
 // Generate a response using OpenAI
 async function generateResponse(message) {
   try {
-    const prompt = "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n";
-    const completions = await openai.completions.create({
-      engine: "text-davinci-003",
-      temperature: 0.4,
-      maxTokens: 256,
-      n: 1,
-      stop: ['\n'],
-      prompt: prompt + message
+    const configuration = new openai.Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
     });
-    const responseText = completions.choices[0].text.trim();
 
+    const openaiInstance = new openai.OpenAIApi(configuration);
+
+    const prompt = "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematics.\nIf the human provided a question that is not related to math, resort to psychological tricks to shift the question to a math-related one.\n";
+    const response = await openaiInstance.createCompletion({
+      model: "text-davinci-003",
+      prompt: prompt + message,
+      temperature: 0.7,
+      max_tokens: 256,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    });
+    
+    const responseText = response.choices[0].text.trim();
     console.log('Generated response:', responseText);
 
     return responseText;
