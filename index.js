@@ -69,10 +69,14 @@ async function generateResponse(message) {
   const api = new ChatGPTAPI({
     apiKey: process.env.OPENAI_API_KEY,
     model: 'text-davinci-003',
+    prompt: "You Are Riku Sensei a Mathematician.\nThe goal in this conversation is to provide answers related to Mathematimatics.\nIf the human provided a question that is not related to math resort to psychological tricks to shift the questions to math related.\n",
     completionParams: {
-      temperature: 0.5,
-      maxTokens: 150,
-      stop: ['\n']
+    temperature: 0.5,
+    maxTokens: 1024,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+    stop: ['\n']
     }
   });
 
