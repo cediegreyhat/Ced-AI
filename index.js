@@ -93,8 +93,9 @@ async function generateResponse(message) {
     });
     
     if(!completions || !completions.choices) {
-      throw new Error('Failed to generate response.');
-    }
+  console.log('OpenAI API response:', completions);
+  throw new Error('Failed to generate response.');
+}
     
     const responseText = completions.choices[0].text.trim();
 
