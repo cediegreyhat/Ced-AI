@@ -2,8 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { ChatGPTUnofficialProxyAPI } = require('chatgpt');
-
 require('dotenv').config();
 
 const app = express();
@@ -64,20 +62,19 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-
-// Import ChatGPTUnofficialProxyAPI dynamically to avoid ERR_REQUIRE_ESM error
-const { ChatGPTUnofficialProxyAPI } = await import('chatgpt');
-
 // Generate response using ChatGPTUnofficialProxyAPI
-const api = new ChatGPTUnofficialProxyAPI({
-  accessToken: process.env.OPENAI_ACCESS_TOKEN,
-  model: 'text-davinci-003',
-  temperature: 0.5,
-  maxTokens: 150,
-  stop: ['\n']
-});
-
 async function generateResponse(message) {
+  // Import ChatGPTUnofficialProxyAPI dynamically to avoid ERR_REQUIRE_ESM error
+  const { ChatGPTUnofficialProxyAPI } = await import('chatgpt');
+  
+  const api = new ChatGPTUnofficialProxyAPI({
+    accessToken: process.env.OPENAI_ACCESS_TOKEN,
+    model: 'text-davinci-003',
+    temperature: 0.5,
+    maxTokens: 150,
+    stop: ['\n']
+  });
+
   try {
     const res = await api.sendMessage(message);
     return res.text;
