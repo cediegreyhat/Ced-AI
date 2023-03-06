@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
-const { ChatGPT } = require('chatgpt-official');
+const { ChatGPTUnofficialProxyAPI } = require('chatgpt');
 
 require('dotenv').config();
 
@@ -38,7 +38,7 @@ app.post('/webhook', async (req, res) => {
       messaging.forEach(async (message) => {
         if (message.message && !message.message.is_echo) {
           // Get user message and send it to ChatGPT for processing
-          const response = await chatGPT.generateResponse(message.message.text);
+          const response = await generateResponse(message.message.text);
           // Send response back to user via Facebook Messenger API
           await sendResponse(message.sender.id, response);
         }
@@ -64,16 +64,19 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Generate response using ChatGPT
-const chatGPT = new ChatGPT({
-  apiKey: process.env.OPENAI_API_KEY,
-  model: 'davinci'
+// Generate response using ChatGPTUnofficialProxyAPI
+const api = new ChatGPTUnofficialProxyAPI({
+  accessToken: process.env.OPENAI_ACCESS_TOKEN,
+  model: 'text-davinci-003',
+  temperature: 0.5,
+  maxTokens: 150,
+  stop: ['\n']
 });
 
 async function generateResponse(message) {
   try {
-    const response = await chatGPT.generateResponse(message);
-    return response;
+    const res = await api.sendMessage(message);
+    return res.text;
   } catch (error) {
     console.error(error);
     return 'Oops, something went wrong!';
