@@ -68,15 +68,16 @@ async function generateResponse(message) {
 
   const api = new ChatGPTAPI({
     apiKey: process.env.OPENAI_API_KEY,
-    prompt: message,
     model: 'gpt-3.5-turbo-0301',
-    temperature: 0.5,
-    maxTokens: 150,
-    stop: ['\n']
+    completionParams: {
+      temperature: 0.5,
+      maxTokens: 150,
+      stop: ['\n']
+    }
   });
 
   try {
-    const res = await api.generate();
+    const res = await api.generate(message);
     return res.choices[0].text;
   } catch (error) {
     console.error(error);
