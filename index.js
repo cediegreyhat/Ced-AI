@@ -31,10 +31,10 @@ app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
-  const { object, entry } = req.body;
+  const { object, entry: entries } = req.body;
 
   if (object === 'page') {
-    for (const entry of entry) {
+    for (const entry of entries) {
       const { messaging } = entry;
       await Promise.all(messaging.map(async (message) => {
         if (message.message && !message.message.is_echo) {
