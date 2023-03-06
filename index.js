@@ -77,7 +77,7 @@ async function generateResponse(message) {
   });
 
   try {
-    const res = await api.generate(message);
+    const res = await api.sendMessage(message);
     return res.choices[0].text;
   } catch (error) {
     console.error(error);
