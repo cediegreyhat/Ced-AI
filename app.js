@@ -75,8 +75,6 @@ app.post('/webhook', async (req, res) => {
 });
 
 // API Endpoint for OpenAI Communication
-const responseCache = new Map();
-
 app.post('/api/message', async (req, res) => {
   try {
     const { message } = req.body;
@@ -86,29 +84,8 @@ app.post('/api/message', async (req, res) => {
       return res.status(400).json({ error: 'Invalid message format.' });
     }
 
-    // Validate signature
-    const { x_hub_signature } = req.headers;
-    const isValidSignature = verifyRequestSignature(req.rawBody, x_hub_signature, process.env.APP_SECRET);
-    if (!isValidSignature) {
-      return res.status(403).json({ error: 'Invalid signature.' });
-    }
-
-    // Check cache for response
-    const cachedResponse = responseCache.get(message);
-    if (cachedResponse) {
-      console.log('Response from cache:', cachedResponse);
-      res.setHeader('Cache-Control', 'no-cache');
-      return res.json({ response: cachedResponse });
-    }
-
     // Generate response
     const response = await generateResponse(message);
-
-    // Cache response
-    responseCache.set(message, response);
-
-    // Set cache-control header to no-cache
-    res.setHeader('Cache-Control', 'no-cache');
 
     res.json({ response });
   } catch (error) {
