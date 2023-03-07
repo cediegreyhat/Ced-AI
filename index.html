@@ -143,54 +143,68 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
   <script>
-    const form = document.querySelector('#input-form');
-    const input = document.querySelector('#input-field');
-    const consoleDiv = document.querySelector('#console');
-    const clearButton = document.querySelector('#clear-button');
+const form = document.querySelector('#input-form');
+const input = document.querySelector('#input-field');
+const consoleDiv = document.querySelector('#console');
+const clearButton = document.querySelector('#clear-button');
 
-    const appendMessage = (message, isBot = false) => {
-      const div = document.createElement('div');
-      div.classList.add(isBot ? 'console-output' : 'console-input');
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-      
-      div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : `$ You: ${messageWithLinks}`;
-      consoleDiv.appendChild(div);
-      consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    };
+const appendMessage = (message, isBot = false) => {
+  const div = document.createElement('div');
+  div.classList.add(isBot ? 'console-output' : 'console-input');
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  
+  const messageWords = messageWithLinks.split(' ');
+  let messageChunks = [''];
+  
+  messageWords.forEach(word => {
+    const currentChunkLength = messageChunks[messageChunks.length - 1].length;
+    const wordLength = word.length;
+    
+    if (currentChunkLength + wordLength > 40) {
+      messageChunks.push('');
+    }
+    
+    messageChunks[messageChunks.length - 1] += `${word} `;
+  });
+  
+  div.innerHTML = isBot ? `Riku: ${messageChunks.join('<br>')}` : `$ You: ${messageChunks.join('<br>')}`;
+  consoleDiv.appendChild(div);
+  consoleDiv.scrollTop = consoleDiv.scrollHeight;
+};
 
-    const clearConsole = () => {
-      consoleDiv.innerHTML = '';
-    };
+const clearConsole = () => {
+  consoleDiv.innerHTML = '';
+};
 
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const message = input.value.trim();
-      
-      if (!message) return;
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const message = input.value.trim();
+  
+  if (!message) return;
 
-      appendMessage(message);
-      
-      try {
-        const response = await axios.post(
-          'https://lmao-hahaxd.cyclic.app/api/message', 
-          { object: { message } }, 
-          { headers: { 'Content-Type': 'application/json' } }
-        );
-        
-        if (!response.data.response) {
-          throw new Error('Failed to generate response.');
-        }
-        
-        appendMessage(response.data.response, true);
+  appendMessage(message);
+  
+  try {
+    const response = await axios.post(
+      'https://lmao-hahaxd.cyclic.app/api/message', 
+      { object: { message } }, 
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    
+    if (!response.data.response) {
+      throw new Error('Failed to generate response.');
+    }
+    
+    appendMessage(response.data.response, true);
 
-        input.value = '';
-      } catch (error) {
-        appendMessage(`Error: ${error.message}`, true);
-      }
-    });
+    input.value = '';
+  } catch (error) {
+    appendMessage(`Error: ${error.message}`, true);
+  }
+});
 
-    clearButton.addEventListener('click', clearConsole);
+clearButton.addEventListener('click', clearConsole);
   </script>
 </body>
 </html>
