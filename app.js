@@ -17,11 +17,6 @@ const app = express();
 
 openai.apiKey = process.env.OPENAI_API_KEY;
 
-// CORS to pass the Access Control Check
-app.use(cors({
-  origin: 'https://lmao-hahaxd.cyclic.app'
-}));
-
 // Use Index.html as a default landing page
 app.get('/', function(req, res){
     res.sendFile('index.html', { root: __dirname + "/" } );
