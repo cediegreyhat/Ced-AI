@@ -5,52 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Riku Bot</title>
     <style>
-      body {
-        font-family: 'Courier New', Courier, monospace;
-        background-color: #1c1c1c;
-        color: #00ff41;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-        padding: 0;
-      }
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #1c1c1c;
+  color: #00ff41;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
 
-      #console {
-        background-color: #292929;
-        border: 2px solid #00ff41;
-        padding: 1rem;
-        width: 40rem;
-        height: 40rem;
-        overflow: auto;
-      }
+#console {
+  background-color: #292929;
+  border: 2px solid #00ff41;
+  padding: 1rem;
+  width: 40rem;
+  height: 40rem;
+  overflow: auto;
+  line-height: 1.5;
+}
 
-      #input-form {
-        margin-top: 1rem;
-        display: flex;
-        justify-content: center;
-      }
+.console-message {
+  display: flex;
+  align-items: center;
+}
 
-      #input-field {
-        background-color: #292929;
-        color: #00ff41;
-        border: 2px solid #00ff41;
-        padding: 0.5rem;
-        width: 20rem;
-        margin-right: 1rem;
-        border-radius: 5px;
-      }
+.console-input {
+  color: #00ff41;
+}
 
-      #submit-button {
-        background-color: #00ff41;
-        color: #292929;
-        border: none;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        border-radius: 5px;
-      }
+.console-output {
+  color: #fff;
+}
+
+.console-output::before {
+  content: 'Riku:';
+  color: #00ff41;
+  margin-right: 0.5rem;
+}
+
+#input-form {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+#input-field {
+  background-color: #292929;
+  color: #00ff41;
+  border: none;
+  padding: 0.5rem;
+  width: 20rem;
+  margin-right: 1rem;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+#submit-button {
+  background-color: #00ff41;
+  color: #292929;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+}
     </style>
   </head>
 
@@ -65,33 +83,61 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
     <script>
-      const form = document.querySelector('form');
+const form = document.querySelector('form');
 const input = document.querySelector('input');
-const output = document.querySelector('#output');
+const consoleDiv = document.querySelector('#console');
+const socket = io();
 
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  output.innerHTML = '<div class="console-input">$ ' + input.value + '</div>';
-  
-  try {
-    const response = await fetch('/api/message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: input.value })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to generate response.');
-    }
-    
-    const data = await response.json();
-    const outputText = data.response;
-    
-    output.innerHTML += '<div class="console-output">' + outputText + '</div>';
-    input.value = '';
-  } catch (error) {
-    output.innerHTML += '<div class="console-error">' + error.message + '</div>';
+// Display message in console
+function displayMessage(message, sender) {
+  const div = document.createElement('div');
+  div.classList.add('console-message');
+
+  if (sender === 'user') {
+    div.innerHTML = '<div class="console-input">> ' + message + '</div>';
+  } else if (sender === 'bot') {
+    div.innerHTML = '<div class="console-output">Riku: ' + message + '</div>';
   }
+
+  consoleDiv.appendChild(div);
+  consoleDiv.scrollTop = consoleDiv.scrollHeight;
+}
+
+// Send message to server and receive response
+async function sendMessage(message) {
+  try {
+    const response = await axios.post('/api/message', { message });
+    const outputText = response.data.response;
+    displayMessage(outputText, 'bot');
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Handle form submit event
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const message = input.value.trim();
+
+  if (message !== '') {
+    displayMessage(message, 'user');
+    sendMessage(message);
+  }
+
+  input.value = '';
+});
+
+// Handle socket events
+socket.on('connect', () => {
+  console.log('Connected to server');
+});
+
+socket.on('disconnect', () => {
+  console.log('Disconnected from server');
+});
+
+socket.on('bot message', (message) => {
+  displayMessage(message, 'bot');
 });
 </script>
   </body>
