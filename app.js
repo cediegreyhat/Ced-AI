@@ -58,7 +58,12 @@ app.post('/webhook', async (req, res) => {
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
   try {
-    const { message } = req.body;
+    const message = req.body.message;
+
+    // Check if message is present in request body
+    if (!message) {
+      return res.status(400).json({ error: 'Message is missing from request body.' });
+    }
 
     // Validate message
     if (typeof message !== 'string' || message.trim().length === 0) {
@@ -72,21 +77,6 @@ app.post('/api/message', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to generate response.' });
-  }
-});
-
-
-// Verify webhook token with Facebook
-app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-
-  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-    console.log('Webhook verified!');
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
   }
 });
 
