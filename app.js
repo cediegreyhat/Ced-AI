@@ -58,7 +58,7 @@ app.post('/webhook', async (req, res) => {
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
   try {
-    const message = req.body.message;
+    const { message } = req.body.object;
 
     // Check if message is present in request body
     if (!message) {
@@ -79,6 +79,7 @@ app.post('/api/message', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
+
 
 // Generate a response using OpenAI
 async function generateResponse(message) {
