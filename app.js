@@ -72,13 +72,22 @@ app.post('/webhook', async (req, res) => {
 app.post('/api/message', async (req, res) => {
   try {
     const { message } = req.body;
+    
+    // Validate message
+    if (typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Invalid message format.' });
+    }
+    
+    // Generate response
     const response = await generateResponse(message);
+    
     res.json({ response });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
+
 
 // Verify webhook token with Facebook
 app.get('/webhook', (req, res) => {
