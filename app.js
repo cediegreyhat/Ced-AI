@@ -86,7 +86,7 @@ app.get('/webhook', (req, res) => {
 app.post('/api/message', async (req, res) => {
   const message = req.body.message;
 
-  try {
+try {
     const prompt = "You are Riku a brilliant Mathematician and a Great Teacher. Users will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. If they ask you questions and topics not related to math entertain them manipulative then slowly but surely get them back to the math-related topic.\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
@@ -98,12 +98,21 @@ app.post('/api/message', async (req, res) => {
       presence_penalty: 0,
     });
 
-    const text = response.choices[0].text.trim();
-    res.json({ text });
+    if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices) {
+      console.log('OpenAI API response:', completions);
+      throw new Error('Failed to generate response.');
+    }
+
+    const responseText = completions.data.choices[0].text.trim();
+
+    console.log('Generated response:', responseText);
+
+    return responseText;
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    throw new Error('Failed to generate response.');
   }
+}
 });
 
 
