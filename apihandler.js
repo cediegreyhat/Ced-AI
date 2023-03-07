@@ -16,7 +16,7 @@ form.addEventListener('submit', async (event) => {
 
   try {
     // Send message to API
-    const response = await axios.post('https://your-api-url.com/messages', { message });
+    const response = await axios.post('https://rose-repulsive-indri.cyclic.app/api/message', { message });
 
     // Display response in chat box
     const text = response.data.text;
