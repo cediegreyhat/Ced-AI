@@ -85,59 +85,38 @@ body {
     <script>
 const form = document.querySelector('form');
 const input = document.querySelector('input');
-const consoleDiv = document.querySelector('#console');
-const socket = io();
+const consoleOutput = document.querySelector('#console');
 
-// Display message in console
-function displayMessage(message, sender) {
-  const div = document.createElement('div');
-  div.classList.add('console-message');
-
-  if (sender === 'user') {
-    div.innerHTML = '<div class="console-input">> ' + message + '</div>';
-  } else if (sender === 'bot') {
-    div.innerHTML = '<div class="console-output">Riku: ' + message + '</div>';
-  }
-
-  consoleDiv.appendChild(div);
-  consoleDiv.scrollTop = consoleDiv.scrollHeight;
+// Function to append a new message to the console output
+function appendToConsole(text, isBot) {
+  const messageClass = isBot ? 'console-bot' : 'console-user';
+  const messageTag = isBot ? '<span style="color: #00ff41;">Riku:</span>' : '';
+  consoleOutput.innerHTML += `<div class="${messageClass}">${messageTag} ${text}</div>`;
+  consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
-// Send message to server and receive response
-async function sendMessage(message) {
-  try {
-    const response = await axios.post('/api/message', { message });
-    const outputText = response.data.response;
-    displayMessage(outputText, 'bot');
-  } catch (error) {
-    console.error(error);
-  }
-}
+// Connect to the WebSocket server
+const socket = io('https://lmao-hahaxd.cyclic.app');
 
-// Handle form submit event
-form.addEventListener('submit', (event) => {
+// Listen for incoming messages from the server
+socket.on('message', message => {
+  appendToConsole(message, true);
+});
+
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const message = input.value.trim();
-
-  if (message !== '') {
-    displayMessage(message, 'user');
-    sendMessage(message);
+  
+  // Append the user's message to the console output
+  const inputText = input.value.trim();
+  if (inputText) {
+    appendToConsole(inputText, false);
   }
-
+  
+  // Send the user's message to the server via WebSocket
+  socket.emit('message', inputText);
+  
+  // Clear the input field
   input.value = '';
-});
-
-// Handle socket events
-socket.on('connect', () => {
-  console.log('Connected to server');
-});
-
-socket.on('disconnect', () => {
-  console.log('Disconnected from server');
-});
-
-socket.on('bot message', (message) => {
-  displayMessage(message, 'bot');
 });
 </script>
   </body>
