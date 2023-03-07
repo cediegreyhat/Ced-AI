@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const crypto = require('crypto');
+const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 
 const configuration = new Configuration({
@@ -15,6 +16,11 @@ require('dotenv').config();
 const app = express();
 
 openai.apiKey = process.env.OPENAI_API_KEY;
+
+// CORS to pass the Access Control Check
+app.use(cors({
+  origin: 'https://lmao-hahaxd.cyclic.app'
+}));
 
 // Use Index.html as a default landing page
 app.get('/', function(req, res){
