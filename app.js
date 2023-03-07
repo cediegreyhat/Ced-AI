@@ -94,7 +94,6 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-
 // Generate a response using OpenAI
 async function generateResponse(message) {
   try {
@@ -124,7 +123,6 @@ async function generateResponse(message) {
     throw new Error('Failed to generate response.');
   }
 }
-
 
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
