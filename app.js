@@ -18,7 +18,7 @@ openai.apiKey = process.env.OPENAI_API_KEY;
 
 // Use Index.html as a default landing page
 app.get('/', function(req, res){
-    res.sendfile('index.html', { root: __dirname + "/" } );
+    res.sendFile('index.html', { root: __dirname + "/" } );
 });
 
 // Verify that the incoming request is from Facebook
