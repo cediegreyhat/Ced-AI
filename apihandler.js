@@ -1,7 +1,3 @@
-const form = document.getElementById('message-form');
-const messageInput = document.getElementById('message-input');
-const chatBox = document.getElementById('chat-box');
-
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -20,6 +16,22 @@ form.addEventListener('submit', async (event) => {
     div.classList.add('user-message');
     chatBox.appendChild(div);
   } catch (error) {
-    console.error(error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      if (error.response.status === 401) {
+        alert('You are not authorized to perform this action.');
+      } else if (error.response.status === 404) {
+        alert('The resource you are trying to access could not be found.');
+      } else {
+        alert('An error occurred. Please try again later.');
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      alert('No response received from the server. Please try again later.');
+    } else {
+      // Something else happened while setting up the request
+      alert('An error occurred. Please try again later.');
+    }
   }
 });
