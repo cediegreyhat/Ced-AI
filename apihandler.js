@@ -1,6 +1,6 @@
 const form = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
-const responseContainer = document.getElementById('response-container');
+const chatBox = document.getElementById('chat-box');
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -17,7 +17,8 @@ form.addEventListener('submit', async (event) => {
     const text = response.data.text;
     const div = document.createElement('div');
     div.innerText = text;
-    responseContainer.appendChild(div);
+    div.classList.add('user-message');
+    chatBox.appendChild(div);
   } catch (error) {
     console.error(error);
   }
