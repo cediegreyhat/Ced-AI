@@ -126,9 +126,9 @@ form.addEventListener('submit', async (event) => {
   appendMessage(message);
   
   try {
-    const response = await axios.post('https://lmao-hahaxd.cyclic.app/api/message', { message }, { headers: { 'Content-Type': 'application/json' } });
+    const response = await axios.post('https://lmao-hahaxd.cyclic.app/api/message', { object: { message } }, { headers: { 'Content-Type': 'application/json' } });
     
-    if (!response.data.success) {
+    if (!response.data.response) {
       throw new Error('Failed to generate response.');
     }
     
