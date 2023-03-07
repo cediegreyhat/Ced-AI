@@ -81,8 +81,18 @@ app.post('/api/message', async (req, res) => {
       return res.status(400).json({ error: 'Invalid message format.' });
     }
 
+    // Check cache
+    const cachedResponse = responseCache.get(message);
+    if (cachedResponse) {
+      console.log('Using cached response:', cachedResponse);
+      return res.json({ response: cachedResponse });
+    }
+
     // Generate response
     const response = await generateResponse(message);
+
+    // Cache response
+    responseCache.set(message, response);
 
     // Set cache-control header to no-cache
     res.setHeader('Cache-Control', 'no-cache');
@@ -112,6 +122,11 @@ app.get('/webhook', (req, res) => {
 // Generate a response using OpenAI
 async function generateResponse(message) {
   try {
+    // Validate message
+    if (typeof message !== 'string' || message.trim().length === 0) {
+      throw new Error('Invalid message format.');
+    }
+
     const prompt = "You are Riku a brilliant Mathematician and a Great Teacher. Users will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. If they ask you questions and topics not related to math entertain them manipulative then slowly but surely get them back to the math-related topic.\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
