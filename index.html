@@ -85,38 +85,40 @@ body {
     <script>
 const form = document.querySelector('form');
 const input = document.querySelector('input');
-const consoleOutput = document.querySelector('#console');
+const consoleDiv = document.querySelector('#console');
 
-// Function to append a new message to the console output
-function appendToConsole(text, isBot) {
-  const messageClass = isBot ? 'console-bot' : 'console-user';
-  const messageTag = isBot ? '<span style="color: #00ff41;">Riku:</span>' : '';
-  consoleOutput.innerHTML += `<div class="${messageClass}">${messageTag} ${text}</div>`;
-  consoleOutput.scrollTop = consoleOutput.scrollHeight;
+const appendMessage = (message, isBot = false) => {
+  const div = document.createElement('div');
+  div.classList.add(isBot ? 'console-output' : 'console-input');
+  div.innerText = isBot ? `Riku: ${message}` : `$ You: ${message}`;
+  consoleDiv.appendChild(div);
+  consoleDiv.scrollTop = consoleDiv.scrollHeight;
 }
-
-// Connect to the WebSocket server
-const socket = io('https://lmao-hahaxd.cyclic.app');
-
-// Listen for incoming messages from the server
-socket.on('message', message => {
-  appendToConsole(message, true);
-});
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  const message = input.value.trim();
   
-  // Append the user's message to the console output
-  const inputText = input.value.trim();
-  if (inputText) {
-    appendToConsole(inputText, false);
+  if (message.length === 0) {
+    return;
   }
+
+  appendMessage(message);
   
-  // Send the user's message to the server via WebSocket
-  socket.emit('message', inputText);
-  
-  // Clear the input field
-  input.value = '';
+  try {
+    const response = await axios.post('/api/message', { message });
+    
+    if (!response.data.success) {
+      throw new Error('Failed to generate response.');
+    }
+    
+    const outputText = response.data.response;
+    appendMessage(outputText, true);
+
+    input.value = '';
+  } catch (error) {
+    appendMessage(error.message, true);
+  }
 });
 </script>
   </body>
