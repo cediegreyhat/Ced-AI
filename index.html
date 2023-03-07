@@ -97,45 +97,5 @@
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dotenv@10.0.0/dist/dotenv.min.js"></script>
   <script src="https://raw.githubusercontent.com/cediegreyhat/Ced-AI/main/apihandler.js"></script>
-  <script>
-  async function sendMessage(message) {
-    try {
-      // Send message to API
-      const response = await axios.post('https://rose-repulsive-indri.cyclic.app/api/message', { message });
-
-      // Display response in chat box
-      const text = response.data.text;
-      const div = document.createElement('div');
-      div.innerText = text;
-      div.classList.add('chat-message');
-      chatBox.appendChild(div);
-
-    } catch (error) {
-      console.error(error);
-      alert('An error occurred. Please try again later.');
-    }
-  }
-
-  // Event listener for form submission
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    const message = messageInput.value;
-    messageInput.value = '';
-
-    if (!message) {
-      return;
-    }
-
-    // Display user message in chat box
-    const div = document.createElement('div');
-    div.innerText = message;
-    div.classList.add('user-message');
-    chatBox.appendChild(div);
-
-    // Send message to AI
-    await sendMessage(message);
-  });
-</script>
 </body>
 </html>
