@@ -140,6 +140,13 @@ const consoleDiv = document.querySelector('#console');
 const appendMessage = (message, isBot = false) => {
   const div = document.createElement('div');
   div.classList.add(isBot ? 'console-output' : 'console-input');
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  
+  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : `$ You: ${messageWithLinks}`;
+  consoleDiv.appendChild(div);
+  consoleDiv.scrollTop = consoleDiv.scrollHeight;
+};
   div.innerText = isBot ? `Riku: ${message}` : `$ You: ${message}`;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
