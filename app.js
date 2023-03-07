@@ -27,25 +27,6 @@ app.get('/', function(req, res){
     res.sendFile('index.html', { root: __dirname + "/" } );
 });
 
-// Verify that the incoming request is from Facebook
-function verifyRequestSignature(req, res, buf) {
-  const signature = req.headers['x-hub-signature'];
-  if (!signature) {
-    throw new Error('Could not validate the signature.');
-  } else {
-    const elements = signature.split('=');
-    const signatureHash = elements[1];
-    const expectedHash = crypto.createHmac('sha1', process.env.APP_SECRET)
-      .update(buf)
-      .digest('hex');
-    if (signatureHash !== expectedHash) {
-      throw new Error('Could not validate the request signature.');
-    }
-  }
-}
-
-// Use the body-parser middleware and verify request signature
-app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
