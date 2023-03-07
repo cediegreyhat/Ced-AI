@@ -68,6 +68,7 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+// API Endpoint for OpenAI Communication
 const responseCache = new Map();
 
 app.post('/api/message', async (req, res) => {
@@ -109,7 +110,6 @@ app.post('/api/message', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
-
 
 
 // Verify webhook token with Facebook
