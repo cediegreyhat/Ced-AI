@@ -1,3 +1,9 @@
+// Get DOM elements
+const form = document.querySelector('#message-form');
+const messageInput = document.querySelector('#message-input');
+const chatBox = document.querySelector('#chat-box');
+
+// Event listener for form submission
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -11,21 +17,10 @@ form.addEventListener('submit', async (event) => {
   try {
     const response = await axios.post('/api/message', { message });
     const text = response.data.text;
-
-    // create the user message div
-    const userMessageDiv = document.createElement('div');
-    userMessageDiv.innerText = message;
-    userMessageDiv.classList.add('user-message');
-    chatBox.appendChild(userMessageDiv);
-
-    // create the AI response div
-    const aiMessageDiv = document.createElement('div');
-    aiMessageDiv.innerText = text;
-    aiMessageDiv.classList.add('chat-message');
-    chatBox.appendChild(aiMessageDiv);
-
-    // scroll to the bottom of the chat box
-    chatBox.scrollTop = chatBox.scrollHeight;
+    const div = document.createElement('div');
+    div.innerText = text;
+    div.classList.add('user-message');
+    chatBox.appendChild(div);
   } catch (error) {
     if (error.response) {
       // The request was made and the server responded with a status code
