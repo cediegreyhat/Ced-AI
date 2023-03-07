@@ -68,17 +68,22 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// API endpoint for generating AI responses
 const responseCache = new Map();
 
 app.post('/api/message', async (req, res) => {
-  console.log('/api/message called!');
   try {
     const { message } = req.body;
 
     // Validate message
     if (typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'Invalid message format.' });
+    }
+
+    // Validate signature
+    const { x_hub_signature } = req.headers;
+    const isValidSignature = verifyRequestSignature(req.rawBody, x_hub_signature, process.env.APP_SECRET);
+    if (!isValidSignature) {
+      return res.status(403).json({ error: 'Invalid signature.' });
     }
 
     // Check cache for response
@@ -104,6 +109,7 @@ app.post('/api/message', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
+
 
 
 // Verify webhook token with Facebook
