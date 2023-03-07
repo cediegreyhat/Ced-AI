@@ -2,57 +2,17 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Chatbot Console</title>
+  <title>OpenAI Chat Console</title>
 </head>
 <body>
-  <h1>Chatbot Console</h1>
+  <h1>OpenAI Chat Console</h1>
   <form id="message-form">
     <input type="text" id="message-input" placeholder="Enter a message...">
     <button type="submit">Send</button>
   </form>
   <div id="response-container"></div>
-  <script>
-    const form = document.getElementById('message-form');
-    const messageInput = document.getElementById('message-input');
-    const responseContainer = document.getElementById('response-container');
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-
-      const message = messageInput.value;
-      messageInput.value = '';
-
-      if (!message) {
-        return;
-      }
-
-      try {
-        const response = await fetch('https://api.openai.com/v1/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-           "model": "text-davinci-003",
-           "prompt": "You are Riku a brilliant Mathematician and a Great Teacher. Users will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. If they ask you questions and topics not related to math entertain them manipulative then slowly but surely get them back to the math-related topic. \n\n",
-           "temperature": 0.7,
-           "max_tokens": 256,
-           "top_p": 1,
-           "frequency_penalty": 0,
-           "presence_penalty": 0
-          }),
-        });
-        const data = await response.json();
-        const text = data.choices[0].text;
-        const div = document.createElement('div');
-        div.innerText = text;
-        responseContainer.appendChild(div);
-      } catch (error) {
-        console.error(error);
-      }
-    });
-  </script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dotenv@10.0.0/dist/dotenv.min.js"></script>
+  <script src=apihandler.js"></script>
 </body>
 </html>
