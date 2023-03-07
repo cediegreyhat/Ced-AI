@@ -81,7 +81,7 @@ const appendMessage = (message, isBot = false) => {
   div.innerText = isBot ? `Riku: ${message}` : `$ You: ${message}`;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
-};
+}
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -94,23 +94,18 @@ form.addEventListener('submit', async (event) => {
   appendMessage(message);
   
   try {
-    const response = await axios.post('/api/message', { message });
+    const response = await axios.post('https://rose-repulsive-indri.cyclic.app/api/message', { message }, { headers: { 'Content-Type': 'application/json' } });
     
-    if (response.status !== 200) {
-      throw new Error(`Request failed with status ${response.status}.`);
-    }
-    
-    const data = response.data;
-    if (!data.success) {
+    if (!response.data.success) {
       throw new Error('Failed to generate response.');
     }
     
-    const outputText = data.response;
+    const outputText = response.data.response;
     appendMessage(outputText, true);
 
     input.value = '';
   } catch (error) {
-    appendMessage(error.message, true);
+    appendMessage(`Error: ${error.message}`, true);
   }
 });
 </script>
