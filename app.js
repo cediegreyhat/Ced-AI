@@ -69,6 +69,8 @@ app.post('/webhook', async (req, res) => {
 });
 
 // API endpoint for generating AI responses
+const responseCache = new Map();
+
 app.post('/api/message', async (req, res) => {
   console.log('/api/message called!');
   try {
@@ -78,9 +80,18 @@ app.post('/api/message', async (req, res) => {
     if (typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'Invalid message format.' });
     }
-    
-    // Generate response
-    const response = await generateResponse(message);
+
+    let response;
+    // Check if response is cached
+    if (responseCache.has(message)) {
+      response = responseCache.get(message);
+      console.log('Response found in cache!');
+    } else {
+      // Generate response
+      response = await generateResponse(message);
+      // Cache response
+      responseCache.set(message, response);
+    }
     
     res.json({ response });
   } catch (error) {
