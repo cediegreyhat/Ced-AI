@@ -97,29 +97,28 @@
         margin-left: 1rem;
       }
 
-      /* Media queries */
-      @media only screen and (max-width: 768px) {
-        #console {
-          width: 80%;
-          max-width: 40rem;
-        }
-        #input-form {
-          width: 80%;
-          max-width: 40rem;
-        }
-      }
+@media only screen and (max-width: 767px) {
+  #console {
+    font-size: 14px;
+    padding: 10px;
+  }
 
-      @media only screen and (max-width: 480px) {
-        #console {
-          width: 90%;
-          max-width: 30rem;
-        }
-        #input-form {
-          width: 90%;
-          max-width: 30rem;
-        }
-      }
+  #input-field {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
 
+@media only screen and (min-width: 768px) {
+  #console {
+    font-size: 16px;
+    padding: 20px;
+  }
+
+  #input-field {
+    font-size: 16px;
+    padding: 20px;
+  }
       /* Custom styles */
       .console-output[data-author="Riku"] {
         margin-left: 2rem;
@@ -154,21 +153,7 @@ const appendMessage = (message, isBot = false) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   
-  const messageWords = messageWithLinks.split(' ');
-  let messageChunks = [''];
-  
-  messageWords.forEach(word => {
-    const currentChunkLength = messageChunks[messageChunks.length - 1].length;
-    const wordLength = word.length;
-    
-    if (currentChunkLength + wordLength > 40) {
-      messageChunks.push('');
-    }
-    
-    messageChunks[messageChunks.length - 1] += `${word} `;
-  });
-  
-  div.innerHTML = isBot ? `Riku: ${messageChunks.join('<br>')}` : `$ You: ${messageChunks.join('<br>')}`;
+  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : `$ You: ${messageWithLinks}`;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
 };
@@ -176,6 +161,18 @@ const appendMessage = (message, isBot = false) => {
 const clearConsole = () => {
   consoleDiv.innerHTML = '';
 };
+
+const adjustChatConsoleWidth = () => {
+  const screenWidth = window.innerWidth;
+  const consoleWidth = screenWidth < 768 ? '100%' : '500px';
+  const inputWidth = screenWidth < 768 ? '100%' : '400px';
+  consoleDiv.style.width = consoleWidth;
+  input.style.width = inputWidth;
+};
+
+adjustChatConsoleWidth();
+
+window.addEventListener('resize', adjustChatConsoleWidth);
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
