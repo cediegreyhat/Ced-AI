@@ -78,6 +78,12 @@ app.get('/webhook', (req, res) => {
 });
 
 
+// Serve the HTML page
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
+
 // Generate a response using OpenAI
 async function generateResponse(message) {
   try {
