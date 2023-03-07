@@ -27,6 +27,8 @@ app.get('/', function(req, res){
     res.sendFile('index.html', { root: __dirname + "/" } );
 });
 
+// Use the body-parser middleware and verify request signature
+app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
@@ -109,6 +111,7 @@ async function generateResponse(message) {
     throw new Error('Failed to generate response.');
   }
 }
+
 
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
