@@ -1,45 +1,28 @@
-// Get DOM elements
-const form = document.querySelector('#message-form');
-const messageInput = document.querySelector('#message-input');
-const chatBox = document.querySelector('#chat-box');
+const form = document.querySelector('form');
+const input = document.querySelector('input');
+const output = document.querySelector('#output');
 
-// Cache object to store responses
-const cache = {};
-
-// Event listener for form submission
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-
-  const message = messageInput.value;
-  messageInput.value = '';
-
-  if (!message) {
-    return;
-  }
-
+  output.innerHTML = '<div class="console-input">$ ' + input.value + '</div>';
+  
   try {
-    let response;
-
-    // Check if response is cached
-    if (cache[message]) {
-      console.log('Using cached response for message:', message);
-      response = cache[message];
-    } else {
-      // Send message to API
-      response = await axios.post('https://rose-repulsive-indri.cyclic.app/api/message', { message });
-      // Cache the response
-      cache[message] = response;
+    const response = await fetch('/api/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: input.value })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to generate response.');
     }
-
-    // Display response in chat box
-    const text = response.data.text;
-    const div = document.createElement('div');
-    div.innerText = text;
-    div.classList.add('chat-message');
-    chatBox.appendChild(div);
-
+    
+    const data = await response.json();
+    const outputText = data.response;
+    
+    output.innerHTML += '<div class="console-output">' + outputText + '</div>';
+    input.value = '';
   } catch (error) {
-    console.error(error);
-    alert('An error occurred. Please try again later.');
+    output.innerHTML += '<div class="console-error">' + error.message + '</div>';
   }
 });
