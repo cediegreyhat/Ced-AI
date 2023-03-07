@@ -81,7 +81,7 @@ const appendMessage = (message, isBot = false) => {
   div.innerText = isBot ? `Riku: ${message}` : `$ You: ${message}`;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
-}
+};
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -96,11 +96,16 @@ form.addEventListener('submit', async (event) => {
   try {
     const response = await axios.post('/api/message', { message });
     
-    if (!response.data.success) {
+    if (response.status !== 200) {
+      throw new Error(`Request failed with status ${response.status}.`);
+    }
+    
+    const data = response.data;
+    if (!data.success) {
       throw new Error('Failed to generate response.');
     }
     
-    const outputText = response.data.response;
+    const outputText = data.response;
     appendMessage(outputText, true);
 
     input.value = '';
