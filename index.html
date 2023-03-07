@@ -6,70 +6,58 @@
     <title>Riku Bot</title>
     <style>
 body {
+  background-color: #000000;
+  color: #ffffff;
   font-family: 'Courier New', Courier, monospace;
-  background-color: #1c1c1c;
-  color: #00ff41;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
 }
 
 #console {
-  background-color: #292929;
+  background-color: #000000;
   border: 2px solid #00ff41;
   padding: 1rem;
-  width: 40rem;
+  width: 60rem;
   height: 40rem;
+  margin: 2rem auto;
   overflow: auto;
-  line-height: 1.5;
-}
-
-.console-message {
   display: flex;
-  align-items: center;
+  flex-direction: column;
 }
 
 .console-input {
   color: #00ff41;
+  font-weight: bold;
 }
 
 .console-output {
-  color: #fff;
+  color: #ffffff;
 }
 
-.console-output::before {
-  content: 'Riku:';
-  color: #00ff41;
-  margin-right: 0.5rem;
+.console-error {
+  color: #ff0000;
 }
 
 #input-form {
-  margin-top: 1rem;
   display: flex;
-  justify-content: center;
+  margin: 0 auto;
+  width: 60rem;
 }
 
 #input-field {
-  background-color: #292929;
-  color: #00ff41;
+  background-color: #000000;
+  color: #ffffff;
   border: none;
-  padding: 0.5rem;
-  width: 20rem;
-  margin-right: 1rem;
-  border-radius: 5px;
-  font-family: inherit;
-  font-size: inherit;
+  padding: 1rem;
+  flex-grow: 1;
 }
 
 #submit-button {
   background-color: #00ff41;
-  color: #292929;
+  color: #000000;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 1rem;
   cursor: pointer;
-  border-radius: 5px;
 }
-    </style>
+</style>
   </head>
 
   <body>
