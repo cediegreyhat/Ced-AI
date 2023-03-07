@@ -16,6 +16,11 @@ const app = express();
 
 openai.apiKey = process.env.OPENAI_API_KEY;
 
+// Use Index.html as a default landing page
+var options = {
+  index: "index.html"
+};
+
 // Verify that the incoming request is from Facebook
 function verifyRequestSignature(req, res, buf) {
   const signature = req.headers['x-hub-signature'];
