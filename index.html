@@ -147,30 +147,27 @@ const appendMessage = (message, isBot = false) => {
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
 };
-  div.innerText = isBot ? `Riku: ${message}` : `$ You: ${message}`;
-  consoleDiv.appendChild(div);
-  consoleDiv.scrollTop = consoleDiv.scrollHeight;
-};
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = input.value.trim();
   
-  if (message.length === 0) {
-    return;
-  }
+  if (!message) return;
 
   appendMessage(message);
   
   try {
-    const response = await axios.post('https://lmao-hahaxd.cyclic.app/api/message', { object: { message } }, { headers: { 'Content-Type': 'application/json' } });
+    const response = await axios.post(
+      'https://lmao-hahaxd.cyclic.app/api/message', 
+      { object: { message } }, 
+      { headers: { 'Content-Type': 'application/json' } }
+    );
     
     if (!response.data.response) {
       throw new Error('Failed to generate response.');
     }
     
-    const outputText = response.data.response;
-    appendMessage(outputText, true);
+    appendMessage(response.data.response, true);
 
     input.value = '';
   } catch (error) {
