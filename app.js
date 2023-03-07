@@ -75,24 +75,18 @@ app.post('/api/message', async (req, res) => {
   console.log('/api/message called!');
   try {
     const { message } = req.body;
-    
+
     // Validate message
     if (typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'Invalid message format.' });
     }
 
-    let response;
-    // Check if response is cached
-    if (responseCache.has(message)) {
-      response = responseCache.get(message);
-      console.log('Response found in cache!');
-    } else {
-      // Generate response
-      response = await generateResponse(message);
-      // Cache response
-      responseCache.set(message, response);
-    }
-    
+    // Generate response
+    const response = await generateResponse(message);
+
+    // Set cache-control header to no-cache
+    res.setHeader('Cache-Control', 'no-cache');
+
     res.json({ response });
   } catch (error) {
     console.error(error);
