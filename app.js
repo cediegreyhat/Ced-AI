@@ -71,6 +71,7 @@ app.post('/webhook', async (req, res) => {
 // API endpoint for generating AI responses
 app.post('/api/message', async (req, res) => {
   console.log('/api/message called!');
+  try {
     const { message } = req.body;
     
     // Validate message
@@ -87,7 +88,6 @@ app.post('/api/message', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
-
 
 
 // Verify webhook token with Facebook
