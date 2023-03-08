@@ -55,14 +55,18 @@ app.post('/webhook', async (req, res) => {
     if (object === 'page') {
       for (const entry of entries) {
         const { messaging } = entry;
-        await Promise.all(messaging.map(async (message) => {
-          if (message.message && !message.message.is_echo) {
-            // Get user message and send it to ChatGPT for processing
-            const response = await generateResponse(message.message.text);
-            // Send response back to user via Facebook Messenger API
-            await sendResponse(message.sender.id, response);
-          }
-        }));
+
+        // Add a check to make sure that messaging exists and is an array.
+        if (Array.isArray(messaging)) {
+          await Promise.all(messaging.map(async (message) => {
+            if (message.message && !message.message.is_echo) {
+              // Get user message and send it to ChatGPT for processing
+              const response = await generateResponse(message.message.text);
+              // Send response back to user via Facebook Messenger API
+              await sendResponse(message.sender.id, response);
+            }
+          }));
+        }
       }
       res.sendStatus(200);
     } else {
