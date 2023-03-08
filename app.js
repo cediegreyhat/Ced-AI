@@ -30,13 +30,21 @@ app.use(cors({
 // If the request is from facebook Verify it
 function verifyRequestSignature(req, res, buf) {
   const signature = req.headers['x-hub-signature'];
+
+  // Check if the request is not coming from Facebook
+  if (req.headers['user-agent'] !== 'facebookexternalhit/1.1') {
+    return;
+  }
+
   if (!signature) {
     throw new Error('Signature not present in request headers');
   }
+
   const [algorithm, signatureHash] = signature.split('=');
   const expectedHash = crypto.createHmac(algorithm, process.env.APP_SECRET)
     .update(buf)
     .digest('hex');
+
   if (!crypto.timingSafeEqual(Buffer.from(signatureHash), Buffer.from(expectedHash))) {
     throw new Error('Could not validate the request signature.');
   }
