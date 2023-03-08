@@ -30,18 +30,17 @@ app.use(cors({
 // If the request is from facebook Verify it
 function verifyRequestSignature(req, res, buf) {
   const signature = req.headers['x-hub-signature'];
-  if (signature) { 
-    const elements = signature.split('=');
-    const signatureHash = elements[1];
-    const expectedHash = crypto.createHmac('sha1', process.env.APP_SECRET)
-      .update(buf)
-      .digest('hex');
-    if (signatureHash !== expectedHash) {
-      throw new Error('Could not validate the request signature.');
-    }
+  if (!signature) {
+    throw new Error('Signature not present in request headers');
+  }
+  const [algorithm, signatureHash] = signature.split('=');
+  const expectedHash = crypto.createHmac(algorithm, process.env.APP_SECRET)
+    .update(buf)
+    .digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(signatureHash), Buffer.from(expectedHash))) {
+    throw new Error('Could not validate the request signature.');
   }
 }
-
 
 
 // Use the body-parser middleware and verify request signature
@@ -128,10 +127,11 @@ async function generateResponse(message) {
 
     return responseText;
   } catch (error) {
-    console.error(error);
-    throw new Error('Failed to generate response.');
+    console.error(`Failed to generate response for message "${message}":`, error);
+    return "Sorry, I couldn't understand your message. Could you please try rephrasing it?";
   }
 }
+
 
 
 // Send response back to user via Facebook Messenger API
@@ -147,7 +147,7 @@ async function sendResponse(recipientId, response) {
       }
     });
   } catch (error) {
-    console.error(error);
+    console.error(`Failed to send response to ${recipientId}:`, error);
   }
 }
 
