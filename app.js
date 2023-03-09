@@ -127,7 +127,7 @@ app.post('/api/message', async (req, res) => {
 // Generate responses using OpenAI
 async function generateResponse(message) {
   try {
-    const prompt = "You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals or suggesting online resources for further study.\nDo not take actions that is not related to math.\nMaintain a friendly Conversation and respond to the questions respectfully.\n\n\nHuman:\nAI:";
+    const prompt = "You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals or suggesting online resources for further study.\nDo not take actions that is not related to math.\nMaintain a friendly Conversation and respond to the questions respectfully.\nHuman: ";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
@@ -136,7 +136,7 @@ async function generateResponse(message) {
       top_p: 1,
       frequency_penalty: 0.05,
       presence_penalty: 0.04,
-      stop: ["AI", "Human"],
+      stop:[" Human:", " AI:"],
     });
 
     if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
