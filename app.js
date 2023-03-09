@@ -65,7 +65,6 @@ app.get('/', function(req, res){
 // CORS to pass the Access Control Check
 app.use(cors({
   origin: 'https://lmao-hahaxd.cyclic.app'
-  origin: 'https://rose-repulsive-indri.cyclic.app'
 }));
 
 // If the request is from facebook Verify it
