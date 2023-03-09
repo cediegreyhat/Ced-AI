@@ -135,7 +135,6 @@ app.post('/api/message', async (req, res) => {
   }
 });
 
-// Generate a response using OpenAI
 async function generateResponse(message) {
   try {
     const prompt = "You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals or suggesting online resources for further study.\nDo not take actions that is not related to math.\n";
@@ -145,25 +144,24 @@ async function generateResponse(message) {
       temperature: 0.4,
       max_tokens: 256,
       top_p: 1,
-      frequency_penalty: 0.37,
-      presence_penalty: 0.33,
+      frequency_penalty: 0.05,
+      presence_penalty: 0.04,
     });
 
-    if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices) {
+    if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
       console.log('OpenAI API response:', completions);
-      throw new Error('Failed to generate response.');
+      throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
     }
 
     const responseText = completions.data.choices[0].text.trim();
-
-    console.log('Generated response:', responseText);
-
+    console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
-    console.error(`Failed to generate response for message "${message}":`, error);
-    return "Sorry, I couldn't understand your message. Could you please try rephrasing it?";
+    console.error(error);
+    throw new Error(`Failed to generate response: ${error.message}`);
   }
 }
+
 
 
 // Send response back to user via Facebook Messenger API
