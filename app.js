@@ -46,7 +46,6 @@ app.post('/api/message', async (req, res) => {
   }
 });
 
-
 // Log all calls and request for debugging
 app.use((req, res, next) => {
   console.log('Received request:', req.method, req.url, req.body);
@@ -129,7 +128,6 @@ app.post('/webhook', async (req, res) => {
         }
       } else {
         res.sendStatus(200);
-        console.log('No user query/message found in the standby event.');
       }
     }
     // Check if the request is a regular message event
