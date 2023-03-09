@@ -4,6 +4,11 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
+const { gzip } = require('zlib');
+const { promisify } = require('util');
+const gzipAsync = promisify(gzip);
+
+
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -180,9 +185,9 @@ async function sendResponse(recipientId, response) {
       return;
     }
 
-    // Send message
+    // Compress message data
     const messages = Array.isArray(response) ? response : [response];
-    const messageData = messages.map((msg) => ({
+    const messageData = await gzipAsync(JSON.stringify(messages.map((msg) => ({
       messaging_type: 'RESPONSE',
       recipient: {
         id: recipientId,
@@ -190,14 +195,25 @@ async function sendResponse(recipientId, response) {
       message: {
         text: msg,
       },
-    }));
+    }))));
 
+    // Send message
     const messageResponse = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
       messaging_type: 'RESPONSE',
       recipient: {
         id: recipientId,
       },
-      message: messageData,
+      message: {
+        attachment: {
+          type: 'file',
+          payload: {
+            is_reusable: true,
+          },
+        },
+      },
+      filedata: messageData.toString('base64'),
+      filename: 'message.json.gz',
+      content_type: 'application/gzip',
     });
 
     return messageResponse.data;
