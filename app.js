@@ -152,11 +152,17 @@ async function generateResponse(message) {
   }
 }
 
-
-
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
   try {
+    // Check if recipient ID is valid
+    const response = await axios.get(`https://graph.facebook.com/v12.0/${recipientId}?fields=name&access_token=${process.env.PAGE_ACCESS_TOKEN}`);
+    if (response.status !== 200 || !response.data.name) {
+      console.log(`Invalid recipient ID: ${recipientId}`);
+      return;
+    }
+
+    // Send message
     await axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
       messaging_type: 'RESPONSE',
       recipient: {
