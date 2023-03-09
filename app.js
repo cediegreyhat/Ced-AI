@@ -186,16 +186,7 @@ async function sendResponse(recipientId, response) {
     }
 
     // Compress message data
-    const messages = Array.isArray(response) ? response : [response];
-    const messageData = await gzipAsync(JSON.stringify(messages.map((msg) => ({
-      messaging_type: 'RESPONSE',
-      recipient: {
-        id: recipientId,
-      },
-      message: {
-        text: msg,
-      },
-    }))));
+    const messageData = zlib.gzipSync(JSON.stringify(response));
 
     // Send message
     const messageResponse = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
