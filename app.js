@@ -68,9 +68,27 @@ app.use(bodyParser.json({ verify: verifyRequestSignature }));
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
   try {
-    const { object, entry: entries } = req.body;
+    const { object, entry: entries, standby } = req.body;
 
-    if (object === 'page') {
+    // Check if the request is a standby event
+    if (object === 'page' && standby) {
+      console.log('Received standby event:', standby);
+
+      // Check if there are user queries/questions in the standby event
+      if (standby.length > 0 && standby[0].message && standby[0].message.text) {
+        const userMsg = standby[0].message.text;
+
+        // Get user message and send it to ChatGPT for processing
+        const response = await generateResponse(userMsg);
+
+        // Send response back to user via Facebook Messenger API
+        await sendResponse(standby[0].sender.id, response);
+
+        console.log('Sent response to standby event.');
+      }
+    }
+    // Check if the request is a regular message event
+    else if (object === 'page' && entries) {
       for (const entry of entries) {
         const { messaging } = entry;
 
@@ -89,15 +107,19 @@ app.post('/webhook', async (req, res) => {
           }));
         }
       }
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
     }
+    else {
+      res.sendStatus(404);
+      return;
+    }
+
+    res.sendStatus(200);
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
   }
 });
+
 
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
