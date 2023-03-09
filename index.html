@@ -6,7 +6,7 @@
     <title>Riku AI™</title>
   </head>
   <style>
-      /* CSS reset */
+     /* CSS reset */
       * {
         margin: 0;
         padding: 0;
@@ -14,56 +14,45 @@
       }
 
       body {
-        background-color: #f5f5f5;
-        color: #333333;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #000000;
+        color: #ffffff;
+        font-family: 'Courier New', Courier, monospace;
       }
 
       #console {
-        background-color: #ffffff;
-        border-radius: 20px;
-        padding: 1.5rem;
+        background-color: #000000;
+        border: 2px solid #00ff41;
+        padding: 1rem;
         width: 90%;
-        max-width: 800px;
-        height: 70vh;
+        max-width: 60rem;
+        height: 40rem;
         margin: 2rem auto;
-        overflow-y: auto;
+        overflow: auto;
         display: flex;
         flex-direction: column;
       }
 
       .console-input {
-        background-color: #f5f5f5;
-        border-radius: 20px;
-        color: #333333;
+        color: #00ff41;
         font-weight: bold;
         align-self: flex-end;
         margin-bottom: 1rem;
-        padding: 1.5rem;
-        max-width: 70%;
-        word-break: break-word;
       }
 
       .console-output {
-        background-color: #f2f2f2;
-        border-radius: 20px;
-        color: #333333;
+        color: #ffffff;
         align-self: flex-start;
         margin-bottom: 1rem;
         display: flex;
         flex-direction: row;
         align-items: center;
-        max-width: 70%;
-        word-break: break-word;
-        padding: 1.5rem;
       }
 
       .console-output-avatar {
-        width: 50px;
-        height: 50px;
+        width: 3rem;
+        height: 3rem;
         margin-right: 1rem;
         border-radius: 50%;
-        flex-shrink: 0;
       }
 
       .console-output-text {
@@ -78,59 +67,46 @@
         display: flex;
         margin: 0 auto;
         width: 90%;
-        max-width: 800px;
+        max-width: 60rem;
         align-items: center;
-        position: fixed;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #ffffff;
-        padding: 1rem;
-        border-radius: 20px;
-        box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
       }
 
       #input-field {
-        background-color: #f5f5f5;
-        color: #333333;
+        background-color: #000000;
+        color: #ffffff;
         border: none;
         padding: 1rem;
         flex-grow: 1;
-        border-radius: 20px;
-        font-size: 16px;
-        margin-right: 1rem;
-        outline: none;
       }
 
       #submit-button {
-        background-color: #00bfff;
-        color: #ffffff;
+        background-color: #00ff41;
+        color: #000000;
         border: none;
         padding: 1rem;
         cursor: pointer;
-        border-radius: 20px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-      }
-
-      #submit-button:hover {
-        background-color: #0099cc;
+        margin-left: 1rem;
       }
 
       #clear-button {
-        background-color: #00bfff;
+        background-color: #ff0000;
         color: #ffffff;
         border: none;
         padding: 1rem;
         cursor: pointer;
-        border-radius: 20px;
-        font-size: 16px;
-        transition: all 0.3s ease;
+        margin-left: 1rem;
       }
 
-      #clear-button:hover {
-        background-color: #0099cc;
-      }
+  #input-field {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
+  #input-field {
+    font-size: 16px;
+    padding: 20px;
+  }
       /* Custom styles */
       .console-output[data-author="Riku"] {
         margin-left: 2rem;
@@ -158,13 +134,14 @@ const form = document.querySelector('#input-form');
 const input = document.querySelector('#input-field');
 const consoleDiv = document.querySelector('#console');
 const clearButton = document.querySelector('#clear-button');
-const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 const appendMessage = (message, isBot = false) => {
   const div = document.createElement('div');
   div.classList.add(isBot ? 'console-output' : 'console-input');
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
   const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : messageWithLinks;
+  
+  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : `$ You: ${messageWithLinks}`;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
 };
@@ -175,8 +152,8 @@ const clearConsole = () => {
 
 const adjustChatConsoleWidth = () => {
   const screenWidth = window.innerWidth;
-  const consoleWidth = screenWidth < 1280 ? '100%' : '1280px';
-  const inputWidth = screenWidth < 720 ? '100%' : '720px';
+  const consoleWidth = screenWidth < 768 ? '100%' : '500px';
+  const inputWidth = screenWidth < 768 ? '100%' : '400px';
   consoleDiv.style.width = consoleWidth;
   input.style.width = inputWidth;
 };
@@ -188,27 +165,23 @@ window.addEventListener('resize', adjustChatConsoleWidth);
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = input.value.trim();
-
+  
   if (!message) return;
 
+  appendMessage(message);
+  
   try {
     const response = await axios.post(
-      'https://lmao-hahaxd.cyclic.app/api/message',
-      { message },
+      'https://lmao-hahaxd.cyclic.app/api/message', 
+      { object: { message } }, 
       { headers: { 'Content-Type': 'application/json' } }
     );
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to generate response: ${response.status}`);
-    }
-
-    const responseData = response.data;
-
-    if (!responseData.response) {
+    
+    if (!response.data.response) {
       throw new Error('Failed to generate response.');
     }
-
-    appendMessage(responseData.response, true);
+    
+    appendMessage(response.data.response, true);
 
     input.value = '';
   } catch (error) {
