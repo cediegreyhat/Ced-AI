@@ -99,6 +99,31 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+// API Endpoint for OpenAI Communication
+app.post('/api/message', async (req, res) => {
+  try {
+    const { message } = req.body.object || {};
+
+    // Check if message is present in request body
+    if (!message) {
+      return res.status(400).json({ error: 'Message is missing from request body.' });
+    }
+
+    // Validate message
+    if (typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Invalid message format.' });
+    }
+
+    // Generate response
+    const response = await generateResponse(message);
+
+    res.json({ success: true, response });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to generate response.' });
+  }
+});
+
 // Generate responses using OpenAI
 async function generateResponse(message) {
   try {
@@ -106,7 +131,7 @@ async function generateResponse(message) {
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
-      temperature: 0.4,
+      temperature: 0.5,
       max_tokens: 256,
       top_p: 1,
       frequency_penalty: 0.05,
