@@ -4,13 +4,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
-const cacheManager = require('cache-manager');
-import { caching } from 'cache-manager';
-const memoryCache = cacheManager.caching({
-  store: 'memory', // Use the 'memory' store
-  max: 100, // Set the maximum number of items that can be stored in the cache to 100
-  ttl: 600 // Set the time-to-live for each item in the cache to 10 minutes (600 seconds)
-});
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -85,15 +79,9 @@ app.post('/webhook', async (req, res) => {
           await Promise.all(messaging.map(async (message) => {
             if (message.message && !message.message.is_echo) {
               const userMsg = message.message.text;
-              let response = await memoryCache.get(userMsg);
 
-              if (response === undefined) {
-                // Get user message and send it to ChatGPT for processing
-                response = await generateResponse(userMsg);
-
-                // Save the response to cache
-                await memoryCache.set(userMsg, response);
-              }
+              // Get user message and send it to ChatGPT for processing
+              const response = await generateResponse(userMsg);
 
               // Send response back to user via Facebook Messenger API
               await sendResponse(message.sender.id, response);
@@ -110,6 +98,7 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
