@@ -6,7 +6,7 @@
     <title>Riku AI™</title>
   </head>
   <style>
-      /* CSS reset */
+     /* CSS reset */
       * {
         margin: 0;
         padding: 0;
@@ -14,56 +14,45 @@
       }
 
       body {
-        background-color: #f5f5f5;
-        color: #333333;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #000000;
+        color: #ffffff;
+        font-family: 'Courier New', Courier, monospace;
       }
 
       #console {
-        background-color: #ffffff;
-        border-radius: 20px;
-        padding: 1.5rem;
+        background-color: #000000;
+        border: 2px solid #00ff41;
+        padding: 1rem;
         width: 90%;
-        max-width: 800px;
-        height: 70vh;
+        max-width: 60rem;
+        height: 40rem;
         margin: 2rem auto;
-        overflow-y: auto;
+        overflow: auto;
         display: flex;
         flex-direction: column;
       }
 
       .console-input {
-        background-color: #f5f5f5;
-        border-radius: 20px;
-        color: #333333;
+        color: #00ff41;
         font-weight: bold;
         align-self: flex-end;
         margin-bottom: 1rem;
-        padding: 1.5rem;
-        max-width: 70%;
-        word-break: break-word;
       }
 
       .console-output {
-        background-color: #f2f2f2;
-        border-radius: 20px;
-        color: #333333;
+        color: #ffffff;
         align-self: flex-start;
         margin-bottom: 1rem;
         display: flex;
         flex-direction: row;
         align-items: center;
-        max-width: 70%;
-        word-break: break-word;
-        padding: 1.5rem;
       }
 
       .console-output-avatar {
-        width: 50px;
-        height: 50px;
+        width: 3rem;
+        height: 3rem;
         margin-right: 1rem;
         border-radius: 50%;
-        flex-shrink: 0;
       }
 
       .console-output-text {
@@ -78,59 +67,46 @@
         display: flex;
         margin: 0 auto;
         width: 90%;
-        max-width: 800px;
+        max-width: 60rem;
         align-items: center;
-        position: fixed;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #ffffff;
-        padding: 1rem;
-        border-radius: 20px;
-        box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
       }
 
       #input-field {
-        background-color: #f5f5f5;
-        color: #333333;
+        background-color: #000000;
+        color: #ffffff;
         border: none;
         padding: 1rem;
         flex-grow: 1;
-        border-radius: 20px;
-        font-size: 16px;
-        margin-right: 1rem;
-        outline: none;
       }
 
       #submit-button {
-        background-color: #00bfff;
-        color: #ffffff;
+        background-color: #00ff41;
+        color: #000000;
         border: none;
         padding: 1rem;
         cursor: pointer;
-        border-radius: 20px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-      }
-
-      #submit-button:hover {
-        background-color: #0099cc;
+        margin-left: 1rem;
       }
 
       #clear-button {
-        background-color: #00bfff;
-        color: #ffffff;
+        background-color: #00ff41;
+        color: #000000;
         border: none;
         padding: 1rem;
         cursor: pointer;
-        border-radius: 20px;
-        font-size: 16px;
-        transition: all 0.3s ease;
+        margin-left: 1rem;
       }
 
-      #clear-button:hover {
-        background-color: #0099cc;
-      }
+  #input-field {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+
+  #input-field {
+    font-size: 16px;
+    padding: 20px;
+  }
       /* Custom styles */
       .console-output[data-author="Riku"] {
         margin-left: 2rem;
@@ -163,9 +139,9 @@ const appendMessage = (message, isBot = false) => {
   const div = document.createElement('div');
   div.classList.add(isBot ? 'console-output' : 'console-input');
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const messageWithLinks = message.replace(urlRegex, '<a href="" target="_blank" rel="noopener">$1</a>');
+  const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   
-  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : ` ${messageWithLinks}`;
+  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : `$ You: ${messageWithLinks}`;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
 };
@@ -176,8 +152,8 @@ const clearConsole = () => {
 
 const adjustChatConsoleWidth = () => {
   const screenWidth = window.innerWidth;
-  const consoleWidth = screenWidth < 1280 ? '100%' : '1280px';
-  const inputWidth = screenWidth < 720 ? '100%' : '720px';
+  const consoleWidth = screenWidth < 1280 ? '100%' : '768px';
+  const inputWidth = screenWidth < 1080 ? '100%' : '920px';
   consoleDiv.style.width = consoleWidth;
   input.style.width = inputWidth;
 };
@@ -186,25 +162,13 @@ adjustChatConsoleWidth();
 
 window.addEventListener('resize', adjustChatConsoleWidth);
 
-// Check if a user name cookie exists
-const userName = getCookie('userName');
-if (userName) {
-  appendMessage(`Welcome back, ${userName}!`);
-}
-
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = input.value.trim();
   
   if (!message) return;
 
-  // If no user name cookie exists, ask the user for their name and set the cookie
-  if (!userName) {
-    setCookie( "Welcome Back", message, 365);
-    appendMessage(`Nice to meet you, ${message}!`);
-  } else {
-    appendMessage(message);
-  }
+  appendMessage(message);
   
   try {
     const response = await axios.post(
@@ -226,20 +190,6 @@ form.addEventListener('submit', async (event) => {
 });
 
 clearButton.addEventListener('click', clearConsole);
-
-// Function to set a cookie
-function setCookie(name, value, days) {
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-}
-
-// Function to get a cookie
-function getCookie(name) {
-  const cookieMatch = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)(;|$)`));
-  if (cookieMatch) {
-    return decodeURIComponent(cookieMatch[2]);
-  }
-}
   </script>
 </body>
 </html>
