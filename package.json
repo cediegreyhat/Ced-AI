@@ -9,6 +9,7 @@
 },
   "author": "Cediegreyhat",
   "license": "ISC",
+  "type": "module",
   "dependencies": {
     "dialogflow-fulfillment": "^0.6.1",
     "cache-manager": "^5.1.7",
