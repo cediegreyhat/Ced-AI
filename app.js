@@ -128,6 +128,7 @@ app.post('/webhook', async (req, res) => {
         }
       } else {
         res.sendStatus(200);
+        console.log('No user query/message found in the standby event.');
       }
     }
     // Check if the request is a regular message event
