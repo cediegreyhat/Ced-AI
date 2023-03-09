@@ -24,7 +24,7 @@ openai.apiKey = process.env.OPENAI_API_KEY;
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
   try {
-    const { message } = req.body.object || {};
+    const message = req.body.object?.message;
 
     // Check if message is present in request body
     if (!message) {
@@ -45,6 +45,7 @@ app.post('/api/message', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
+
 
 // Log all calls and request for debugging
 app.use((req, res, next) => {
