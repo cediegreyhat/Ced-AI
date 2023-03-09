@@ -99,7 +99,7 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-
+// Generate responses using OpenAI
 async function generateResponse(message) {
   try {
     const prompt = "You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals or suggesting online resources for further study.\nDo not take actions that is not related to math.\nMaintain a friendly Conversation and respond to the questions respectfully.\n";
@@ -131,14 +131,14 @@ async function generateResponse(message) {
 async function sendResponse(recipientId, response) {
   try {
     // Check if recipient ID is valid
-    const recipientResponse = await axios.get(`https://graph.facebook.com/v12.0/${recipientId}?fields=name&access_token=${process.env.PAGE_ACCESS_TOKEN}`);
+    const recipientResponse = await axios.get(`https://graph.facebook.com/v16.0/${recipientId}?fields=name&access_token=${process.env.PAGE_ACCESS_TOKEN}`);
     if (recipientResponse.status !== 200 || !recipientResponse.data.name) {
       console.log(`Invalid recipient ID: ${recipientId}`);
       return;
     }
 
     // Send message
-    const messageResponse = await axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+    const messageResponse = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
       messaging_type: 'RESPONSE',
       recipient: {
         id: recipientId
