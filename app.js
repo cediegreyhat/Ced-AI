@@ -181,22 +181,32 @@ async function sendResponse(recipientId, response) {
     }
 
     // Send message
-    const messageResponse = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+    const messages = Array.isArray(response) ? response : [response];
+    const messageData = messages.map((msg) => ({
       messaging_type: 'RESPONSE',
       recipient: {
-        id: recipientId
+        id: recipientId,
       },
       message: {
-        text: response
-      }
+        text: msg,
+      },
+    }));
+
+    const response = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+      message_type: 'RESPONSE',
+      messaging_type: 'MESSAGE_TAG',
+      recipient: {
+        id: recipientId,
+      },
+      message: messageData,
+      tag: 'ACCOUNT_UPDATE',
     });
 
-    console.log(`Message sent to ${recipientId}. Response: ${JSON.stringify(messageResponse.data)}`);
+    return response.data;
   } catch (error) {
-    console.error(`Failed to send response to ${recipientId}:`, error);
+    console.error(`Error sending message: ${error}`);
   }
 }
-
-
+    
 // Start the server
 app.listen(process.env.PORT || 3000, () => console.log('Webhook is listening!'));
