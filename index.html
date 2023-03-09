@@ -186,12 +186,6 @@ adjustChatConsoleWidth();
 
 window.addEventListener('resize', adjustChatConsoleWidth);
 
-// Check if a user name cookie exists
-const userName = getCookie('userName');
-if (userName) {
-  appendMessage(`Welcome back, ${userName}!`);
-}
-
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = input.value.trim();
