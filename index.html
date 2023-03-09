@@ -200,7 +200,7 @@ form.addEventListener('submit', async (event) => {
 
   // If no user name cookie exists, ask the user for their name and set the cookie
   if (!userName) {
-    setCookie('userName', message, 365);
+    setCookie( message, 365);
     appendMessage(`Nice to meet you, ${message}!`);
   } else {
     appendMessage(message);
