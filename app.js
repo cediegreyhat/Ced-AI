@@ -174,7 +174,6 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-
 // Generate responses using OpenAI
 async function generateResponse(message) {
   try {
