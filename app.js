@@ -65,6 +65,9 @@ function verifyRequestSignature(req, res, buf) {
 // Use the body-parser middleware and verify request signature
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
+// Caching for faster processing
+const cache = {};
+
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
   try {
@@ -77,14 +80,23 @@ app.post('/webhook', async (req, res) => {
       // Check if there are user queries/questions in the standby event
       if (standby.length > 0 && standby[0].message && standby[0].message.text) {
         const userMsg = standby[0].message.text;
+        const userId = standby[0].sender.id;
 
-        // Get user message and send it to ChatGPT for processing
-        const response = await generateResponse(userMsg);
+        // Check cache for previous response
+        if (cache[userId] && cache[userId].msg === userMsg) {
+          console.log('Response found in cache:', cache[userId].response);
+          await sendResponse(userId, cache[userId].response);
+        } else {
+          // Get user message and send it to ChatGPT for processing
+          const response = await generateResponse(userMsg);
 
-        // Send response back to user via Facebook Messenger API
-        await sendResponse(standby[0].sender.id, response);
+          // Send response back to user via Facebook Messenger API
+          await sendResponse(userId, response);
 
-        console.log('Sent response to standby event.');
+          // Store response in cache
+          cache[userId] = { msg: userMsg, response };
+          console.log('Sent response to standby event.');
+        }
       }
     }
     // Check if the request is a regular message event
@@ -95,14 +107,24 @@ app.post('/webhook', async (req, res) => {
         // Add a check to make sure that messaging exists and is an array.
         if (Array.isArray(messaging)) {
           await Promise.all(messaging.map(async (message) => {
-            if (message.message) {
+            if (message.message && message.message.text) {
               const userMsg = message.message.text;
+              const userId = message.sender.id;
 
-              // Get user message and send it to ChatGPT for processing
-              const response = await generateResponse(userMsg);
+              // Check cache for previous response
+              if (cache[userId] && cache[userId].msg === userMsg) {
+                console.log('Response found in cache:', cache[userId].response);
+                await sendResponse(userId, cache[userId].response);
+              } else {
+                // Get user message and send it to ChatGPT for processing
+                const response = await generateResponse(userMsg);
 
-              // Send response back to user via Facebook Messenger API
-              await sendResponse(message.sender.id, response);
+                // Send response back to user via Facebook Messenger API
+                await sendResponse(userId, response);
+
+                // Store response in cache
+                cache[userId] = { msg: userMsg, response };
+              }
             }
           }));
         }
@@ -119,6 +141,7 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 // API Endpoint for OpenAI Communication
