@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const cacheManager = require('cache-manager');
+import { caching } from 'cache-manager';
 const memoryCache = cacheManager.caching({
   store: 'memory', // Use the 'memory' store
   max: 100, // Set the maximum number of items that can be stored in the cache to 100
