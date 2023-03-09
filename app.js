@@ -77,7 +77,7 @@ app.post('/webhook', async (req, res) => {
         // Add a check to make sure that messaging exists and is an array.
         if (Array.isArray(messaging)) {
           await Promise.all(messaging.map(async (message) => {
-            if (message.message && !message.message.is_echo) {
+            if (message.message) {
               const userMsg = message.message.text;
 
               // Get user message and send it to ChatGPT for processing
@@ -99,31 +99,6 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-
-// API Endpoint for OpenAI Communication
-app.post('/api/message', async (req, res) => {
-  try {
-    const { message } = req.body.object || {};
-
-    // Check if message is present in request body
-    if (!message) {
-      return res.status(400).json({ error: 'Message is missing from request body.' });
-    }
-
-    // Validate message
-    if (typeof message !== 'string' || message.trim().length === 0) {
-      return res.status(400).json({ error: 'Invalid message format.' });
-    }
-
-    // Generate response
-    const response = await generateResponse(message);
-
-    res.json({ success: true, response });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to generate response.' });
-  }
-});
 
 async function generateResponse(message) {
   try {
