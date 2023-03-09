@@ -4,9 +4,8 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
-const zlib = require('zlib');
 const { promisify } = require('util');
-const gzipAsync = promisify(gzip);
+
 
 
 
@@ -185,9 +184,6 @@ async function sendResponse(recipientId, response) {
       return;
     }
 
-    // Compress message data
-    const messageData = zlib.gzipSync(JSON.stringify(response));
-
     // Send message
     const messageResponse = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
       messaging_type: 'RESPONSE',
@@ -195,16 +191,8 @@ async function sendResponse(recipientId, response) {
         id: recipientId,
       },
       message: {
-        attachment: {
-          type: 'file',
-          payload: {
-            is_reusable: true,
-          },
-        },
+        text: response,
       },
-      filedata: messageData.toString('base64'),
-      filename: 'message.json.gz',
-      content_type: 'application/gzip',
     });
 
     return messageResponse.data;
@@ -212,6 +200,7 @@ async function sendResponse(recipientId, response) {
     console.error(`Error sending message: ${error}`);
   }
 }
+
    
 // Start the server
 app.listen(process.env.PORT || 3000, () => console.log('Webhook is listening!'));
