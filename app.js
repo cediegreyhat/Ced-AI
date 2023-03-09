@@ -192,21 +192,19 @@ async function sendResponse(recipientId, response) {
       },
     }));
 
-    const response = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
-      message_type: 'RESPONSE',
-      messaging_type: 'MESSAGE_TAG',
+    const messageResponse = await axios.post(`https://graph.facebook.com/v16.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+      messaging_type: 'RESPONSE',
       recipient: {
         id: recipientId,
       },
       message: messageData,
-      tag: 'ACCOUNT_UPDATE',
     });
 
-    return response.data;
+    return messageResponse.data;
   } catch (error) {
     console.error(`Error sending message: ${error}`);
   }
 }
-    
+   
 // Start the server
 app.listen(process.env.PORT || 3000, () => console.log('Webhook is listening!'));
