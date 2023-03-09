@@ -176,8 +176,8 @@ const clearConsole = () => {
 
 const adjustChatConsoleWidth = () => {
   const screenWidth = window.innerWidth;
-  const consoleWidth = screenWidth < 1280 ? '100%' : '500px';
-  const inputWidth = screenWidth < 720 ? '100%' : '400px';
+  const consoleWidth = screenWidth < 1280 ? '100%' : '1280px';
+  const inputWidth = screenWidth < 720 ? '100%' : '720px';
   consoleDiv.style.width = consoleWidth;
   input.style.width = inputWidth;
 };
