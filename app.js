@@ -4,6 +4,8 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
+const cacheManager = require('cache-manager');
+const memoryCache = cacheManager.caching({ store: 'memory', max: 100, ttl: 600 });
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -67,8 +69,17 @@ app.post('/webhook', async (req, res) => {
         if (Array.isArray(messaging)) {
           await Promise.all(messaging.map(async (message) => {
             if (message.message && !message.message.is_echo) {
-              // Get user message and send it to ChatGPT for processing
-              const response = await generateResponse(message.message.text);
+              const userMsg = message.message.text;
+              let response = await memoryCache.get(userMsg);
+
+              if (response === undefined) {
+                // Get user message and send it to ChatGPT for processing
+                response = await generateResponse(userMsg);
+
+                // Save the response to cache
+                await memoryCache.set(userMsg, response);
+              }
+
               // Send response back to user via Facebook Messenger API
               await sendResponse(message.sender.id, response);
             }
@@ -141,16 +152,6 @@ async function generateResponse(message) {
 }
 
 
-
-// Keep track of conversations
-const conversations = {};
-
-// Send initial response to user
-async function sendInitialResponse(recipientId) {
-  const response = 'Hello! How can I assist you today?';
-  await sendResponse(recipientId, response);
-}
-
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
   try {
@@ -165,69 +166,6 @@ async function sendResponse(recipientId, response) {
     });
   } catch (error) {
     console.error(`Failed to send response to ${recipientId}:`, error);
-  }
-}
-
-// Handle incoming messages from user
-async function handleIncomingMessage(event) {
-  const recipientId = event.sender.id;
-  const message = event.message.text;
-
-  // Check if this is a new conversation
-  if (!conversations[recipientId]) {
-    await sendInitialResponse(recipientId);
-  }
-
-  // Handle different message types
-  if (message.toLowerCase().includes('help')) {
-    const response = 'I can help you with the following:\n1. Get technical support by emailing us in "delossantos.lhordcedrick040505@gmail.com"';
-    await sendResponse(recipientId, response);
-  } else if (message.toLowerCase().includes('schedule appointment')) {
-    const response = 'Great! When would you like to schedule your appointment?';
-    await sendResponse(recipientId, response);
-  } else if (message.toLowerCase().includes('product information')) {
-    const response = 'Riku AI is a chatbot designed to teach and help students about Mathematics';
-    await sendResponse(recipientId, response);
-  } else if (message.toLowerCase().includes('technical support')) {
-    const response = 'You can contact Tech Support via "Email:delossantos.lhordcedrick040505@gmail.com"';
-    await sendResponse(recipientId, response);
-  } else {
-    const response = 'I\'m sorry, I didn\'t understand what you said. Can you please try again or type "help" for a list of things I can help you with?';
-    await sendResponse(recipientId, response);
-  }
-
-  // Store the message in the conversation history
-  conversations[recipientId] = conversations[recipientId] || [];
-  conversations[recipientId].push(message);
-}
-
-// Handle message deletions
-async function handleDeletion(event) {
-  const recipientId = event.recipient.id;
-  const messageId = event.timestamp;
-  
-  // Check if this conversation exists
-  if (conversations[recipientId]) {
-    // Find the index of the deleted message in the conversation history
-    const messageIndex = conversations[recipientId].indexOf(messageId);
-    if (messageIndex !== -1) {
-      // Remove the deleted message from the conversation history
-      conversations[recipientId].splice(messageIndex, 1);
-    }
-  } else {
-    // If the conversation doesn't exist, start a new one
-    await sendInitialResponse(recipientId);
-  }
-}
-
-// Handle incoming events from Facebook Messenger API
-async function handleEvent(event) {
-  if (event.message) {
-    await handleIncomingMessage(event);
-  } else if (event.message_deletions) {
-    await handleDeletion(event);
-  } else {
-    console.log('Unknown event:', event);
   }
 }
 
