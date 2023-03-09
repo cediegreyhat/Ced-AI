@@ -5,8 +5,11 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const cacheManager = require('cache-manager');
-const memoryCache = cacheManager.caching({ store: 'memory', max: 100, ttl: 600 });
-
+const memoryCache = cacheManager.caching({
+  store: 'memory', // Use the 'memory' store
+  max: 100, // Set the maximum number of items that can be stored in the cache to 100
+  ttl: 600 // Set the time-to-live for each item in the cache to 10 minutes (600 seconds)
+});
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -18,6 +21,17 @@ require('dotenv').config();
 const app = express();
 
 openai.apiKey = process.env.OPENAI_API_KEY;
+
+// Log all calls and request for debugging
+app.use((req, res, next) => {
+  console.log('Received request:', req.method, req.url, req.body);
+  const originalSend = res.send;
+  res.send = function (body) {
+    console.log('Sending response:', res.statusCode, body);
+    originalSend.call(res, body);
+  };
+  next();
+});
 
 // Use Index.html as a default landing page
 app.get('/', function(req, res){
