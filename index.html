@@ -158,14 +158,13 @@ const form = document.querySelector('#input-form');
 const input = document.querySelector('#input-field');
 const consoleDiv = document.querySelector('#console');
 const clearButton = document.querySelector('#clear-button');
+const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 const appendMessage = (message, isBot = false) => {
   const div = document.createElement('div');
   div.classList.add(isBot ? 'console-output' : 'console-input');
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const messageWithLinks = message.replace(urlRegex, '<a href="" target="_blank" rel="noopener">$1</a>');
-  
-  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : ` ${messageWithLinks}`;
+  const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : messageWithLinks;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
 };
@@ -189,21 +188,27 @@ window.addEventListener('resize', adjustChatConsoleWidth);
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = input.value.trim();
-  
+
   if (!message) return;
-  
+
   try {
     const response = await axios.post(
-      'https://lmao-hahaxd.cyclic.app/api/message', 
-      { object: { message } }, 
+      'https://lmao-hahaxd.cyclic.app/api/message',
+      { message },
       { headers: { 'Content-Type': 'application/json' } }
     );
-    
-    if (!response.data.response) {
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to generate response: ${response.status}`);
+    }
+
+    const responseData = response.data;
+
+    if (!responseData.response) {
       throw new Error('Failed to generate response.');
     }
-    
-    appendMessage(response.data.response, true);
+
+    appendMessage(responseData.response, true);
 
     input.value = '';
   } catch (error) {
