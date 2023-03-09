@@ -4,7 +4,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
-const { gzip } = require('zlib');
+const zlib = require('zlib');
 const { promisify } = require('util');
 const gzipAsync = promisify(gzip);
 
