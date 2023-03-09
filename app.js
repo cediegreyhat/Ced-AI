@@ -24,7 +24,7 @@ openai.apiKey = process.env.OPENAI_API_KEY;
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
   try {
-    const message = req.body.object?.message;
+    const { message } = req.body.object || {};
 
     // Check if message is present in request body
     if (!message) {
