@@ -156,14 +156,14 @@ async function generateResponse(message) {
 async function sendResponse(recipientId, response) {
   try {
     // Check if recipient ID is valid
-    const response = await axios.get(`https://graph.facebook.com/v12.0/${recipientId}?fields=name&access_token=${process.env.PAGE_ACCESS_TOKEN}`);
-    if (response.status !== 200 || !response.data.name) {
+    const recipientResponse = await axios.get(`https://graph.facebook.com/v12.0/${recipientId}?fields=name&access_token=${process.env.PAGE_ACCESS_TOKEN}`);
+    if (recipientResponse.status !== 200 || !recipientResponse.data.name) {
       console.log(`Invalid recipient ID: ${recipientId}`);
       return;
     }
 
     // Send message
-    await axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+    const messageResponse = await axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
       messaging_type: 'RESPONSE',
       recipient: {
         id: recipientId
@@ -172,10 +172,13 @@ async function sendResponse(recipientId, response) {
         text: response
       }
     });
+
+    console.log(`Message sent to ${recipientId}. Response: ${JSON.stringify(messageResponse.data)}`);
   } catch (error) {
     console.error(`Failed to send response to ${recipientId}:`, error);
   }
 }
+
 
 // Start the server
 app.listen(process.env.PORT || 3000, () => console.log('Webhook is listening!'));
