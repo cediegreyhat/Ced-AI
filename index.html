@@ -89,24 +89,17 @@
       }
 
       #clear-button {
-        background-color: #00ff41;
-        color: #000000;
+        background-color: #00bfff;
+        color: #ffffff;
         border: none;
         padding: 1rem;
         cursor: pointer;
         margin-left: 1rem;
       }
 
-  #input-field {
-    font-size: 14px;
-    padding: 10px;
-  }
-
-
-  #input-field {
-    font-size: 16px;
-    padding: 20px;
-  }
+      #clear-button:hover {
+        background-color: #0099cc;
+      }
       /* Custom styles */
       .console-output[data-author="Riku"] {
         margin-left: 2rem;
@@ -152,8 +145,8 @@ const clearConsole = () => {
 
 const adjustChatConsoleWidth = () => {
   const screenWidth = window.innerWidth;
-  const consoleWidth = screenWidth < 1280 ? '100%' : '768px';
-  const inputWidth = screenWidth < 1080 ? '100%' : '920px';
+  const consoleWidth = screenWidth < 1280 ? '100%' : '1280px';
+  const inputWidth = screenWidth < 720 ? '100%' : '720px';
   consoleDiv.style.width = consoleWidth;
   input.style.width = inputWidth;
 };
