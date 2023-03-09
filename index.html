@@ -197,14 +197,6 @@ form.addEventListener('submit', async (event) => {
   const message = input.value.trim();
   
   if (!message) return;
-
-  // If no user name cookie exists, ask the user for their name and set the cookie
-  if (!userName) {
-    setCookie( "Welcome Back", message, 365);
-    appendMessage(`Nice to meet you, ${message}!`);
-  } else {
-    appendMessage(message);
-  }
   
   try {
     const response = await axios.post(
@@ -226,20 +218,6 @@ form.addEventListener('submit', async (event) => {
 });
 
 clearButton.addEventListener('click', clearConsole);
-
-// Function to set a cookie
-function setCookie(name, value, days) {
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-}
-
-// Function to get a cookie
-function getCookie(name) {
-  const cookieMatch = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)(;|$)`));
-  if (cookieMatch) {
-    return decodeURIComponent(cookieMatch[2]);
-  }
-}
   </script>
 </body>
 </html>
