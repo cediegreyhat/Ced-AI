@@ -128,7 +128,6 @@ app.post('/webhook', async (req, res) => {
         }
       } else {
         res.sendStatus(200);
-        return;
       }
     }
     // Check if the request is a regular message event
@@ -161,13 +160,12 @@ app.post('/webhook', async (req, res) => {
           }));
         }
       }
+      res.sendStatus(200);
     }
     else {
       res.sendStatus(404);
       return;
     }
-
-    res.sendStatus(200);
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
