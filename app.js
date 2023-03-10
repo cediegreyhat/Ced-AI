@@ -68,7 +68,93 @@ function verifyRequestSignature(req, res, buf) {
 // Use the body-parser middleware and verify request signature
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
-// Thread Control Handler for facebook
+// Caching for faster processing
+const cache = {};
+
+// Webhook for receiving messages from Facebook Messenger
+app.post('/webhook', async (req, res) => {
+  try {
+    const { object, entry: entries, standby } = req.body;
+
+    // Check if the request is a standby event
+    if (object === 'page' && standby) {
+      console.log('Received standby event:', standby);
+
+      // Check if there are user queries/questions in the standby event
+      if (standby.length > 0 && ((standby[0].message && standby[0].message.text) || standby[0].text)) {
+        const userMsg = (standby[0].message && standby[0].message.text) || standby[0].text;
+        const userId = standby[0].sender.id;
+
+        // Request thread control from Facebook
+        await requestThreadControl(userId);
+
+        // Check cache for previous response
+        if (cache[userId] && cache[userId].msg === userMsg) {
+          console.log('Response found in cache:', cache[userId].response);
+          await sendResponse(userId, cache[userId].response);
+        } else {
+          // Get user message and send it to ChatGPT for processing
+          const response = await generateResponse(userMsg);
+
+          // Send response back to user via Facebook Messenger API
+          await sendResponse(userId, response);
+
+          // Store response in cache
+          cache[userId] = { msg: userMsg, response };
+          console.log('Sent response to standby event.');
+        }
+      }
+    }
+
+    // Check if the request is a regular message event
+    else if (object === 'page' && entries) {
+      for (const entry of entries) {
+        const { messaging } = entry;
+
+        // Add a check to make sure that messaging exists and is an array.
+        if (Array.isArray(messaging)) {
+          await Promise.all(messaging.map(async (message) => {
+            if (message.message && message.message.text) {
+              const userMsg = message.message.text;
+              const userId = message.sender.id;
+
+              // Check cache for previous response
+              if (cache[userId] && cache[userId].msg === userMsg) {
+                console.log('Response found in cache:', cache[userId].response);
+                await sendResponse(userId, cache[userId].response);
+              } else {
+                // Request thread control from Facebook
+                await requestThreadControl(userId);
+
+                // Get user message and send it to ChatGPT for processing
+                const response = await generateResponse(userMsg);
+
+                // Send response back to user via Facebook Messenger API
+                await sendResponse(userId, response);
+
+                // Store response in cache
+                cache[userId] = { msg: userMsg, response };
+
+                // Release thread control back to Facebook
+                await releaseThreadControl(userId);
+              }
+            }
+          }));
+        }
+      }
+      res.sendStatus(200);
+    }
+    else {
+      res.sendStatus(404);
+      return;
+    }
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
+// Requesting Thread Control in facebook
 const requestThreadControl = async (userId) => {
   try {
     await axios.post(
@@ -109,119 +195,6 @@ const releaseThreadControl = async (userId) => {
     console.error(`Error releasing thread control from user ${userId}:`, error.response.data);
   }
 }
-
-const checkThreadControl = async (userId) => {
-  try {
-    const response = await axios.get(
-      `https://graph.facebook.com/v16.0/${userId}/thread_owner`,
-      {
-        params: {
-          "access_token": process.env.PAGE_ACCESS_TOKEN
-        }
-      }
-    );
-    const threadOwner = response.data.data[0];
-    console.log(`Thread control for user ${userId} is with ${threadOwner.name} (${threadOwner.id})`);
-    return threadOwner.id === process.env.FACEBOOK_APP_ID;
-  } catch (error) {
-    console.error(`Error checking thread control for user ${userId}:`, error.response.data);
-    return false;
-  }
-}
-
-// Caching for faster processing
-const cache = {};
-
-// Webhook for receiving messages from Facebook Messenger
-app.post('/webhook', async (req, res) => {
-  try {
-    const { object, entry: entries, standby } = req.body;
-
-    // Check if the request is a standby event
-    if (object === 'page' && standby) {
-      console.log('Received standby event:', standby);
-
-      // Check if there are user queries/questions in the standby event
-      if (standby.length > 0 && ((standby[0].message && standby[0].message.text) || standby[0].text)) {
-        const userMsg = (standby[0].message && standby[0].message.text) || standby[0].text;
-        const userId = standby[0].sender.id;
-
-        // Check if bot has thread control
-        const hasThreadControl = await checkThreadControl(userId);
-        if (hasThreadControl) {
-          // Check cache for previous response
-          if (cache[userId] && cache[userId].msg === userMsg) {
-            console.log('Response found in cache:', cache[userId].response);
-            await sendResponse(userId, cache[userId].response);
-          } else {
-            // Get user message and send it to ChatGPT for processing
-            const response = await generateResponse(userMsg);
-
-            // Send response back to user via Facebook Messenger API
-            await sendResponse(userId, response);
-
-            // Store response in cache
-            cache[userId] = { msg: userMsg, response };
-            console.log('Sent response to standby event.');
-          }
-        } else {
-          // Request thread control from Facebook
-          await requestThreadControl(userId);
-        }
-      }
-    }
-
-    // Check if the request is a regular message event
-    else if (object === 'page' && entries) {
-      for (const entry of entries) {
-        const { messaging } = entry;
-
-        // Add a check to make sure that messaging exists and is an array.
-        if (Array.isArray(messaging)) {
-          await Promise.all(messaging.map(async (message) => {
-            if (message.message && message.message.text) {
-              const userMsg = message.message.text;
-              const userId = message.sender.id;
-
-              // Check if bot has thread control
-              const hasThreadControl = await checkThreadControl(userId);
-              if (hasThreadControl) {
-                // Check cache for previous response
-                if (cache[userId] && cache[userId].msg === userMsg) {
-                  console.log('Response found in cache:', cache[userId].response);
-                  await sendResponse(userId, cache[userId].response);
-                } else {
-                  // Get user message and send it to ChatGPT for processing
-                  const response = await generateResponse(userMsg);
-
-                  // Send response back to user via Facebook Messenger API
-                  await sendResponse(userId, response);
-
-                  // Store response in cache
-                  cache[userId] = { msg: userMsg, response };
-
-                  // Release thread control back to Facebook
-                  await releaseThreadControl(userId);
-                }
-              } else {
-                // Request thread control from Facebook
-                await requestThreadControl(userId);
-              }
-            }
-          }));
-        }
-      }
-      res.sendStatus(200);
-    }
-    else {
-      res.sendStatus(404);
-      return;
-    }
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
-});
 
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
