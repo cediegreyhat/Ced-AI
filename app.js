@@ -86,28 +86,15 @@ app.post('/webhook', async (req, res) => {
         const userMsg = (standby[0].message && standby[0].message.text) || standby[0].text;
         const userId = standby[0].sender.id;
 
-        // Check cache for previous response
-        if (cache[userId] && cache[userId].msg === userMsg) {
-          console.log('Response found in cache:', cache[userId].response);
-          await sendResponse(userId, cache[userId].response);
-        } else {
-          // Send request to Facebook to move conversation to the main thread
-          await axios.post(`https://graph.facebook.com/v13.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
-            recipient: { id: userId },
-            target_app_id: 263902037430900,
-            metadata: JSON.stringify({ action: 'switch_to_bot' })
-          });
+        // Send request to Facebook API to initiate a response if the user has sent a message or query in the standby event
+        await axios.post(`https://graph.facebook.com/v13.0/me/trigger_send_api?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+          recipient: { id: userId },
+          trigger: 'user_initiated'
+        });
 
-          // Get user message and send it to ChatGPT for processing
-          const response = await generateResponse(userMsg);
-
-          // Send response back to user via Facebook Messenger API
-          await sendResponse(userId, response);
-
-          // Store response in cache
-          cache[userId] = { msg: userMsg, response };
-          console.log('Sent response to standby event.');
-        }
+        // Store the user message in cache for future use
+        cache[userId] = { msg: userMsg };
+        console.log('Stored message in cache:', cache[userId].msg);
       } else {
         res.sendStatus(200);
       }
@@ -153,6 +140,7 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 // Generate responses using OpenAI
 async function generateResponse(message) {
