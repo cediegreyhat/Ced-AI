@@ -88,9 +88,10 @@ app.post('/webhook', async (req, res) => {
           `https://graph.facebook.com/v16.0/me/take_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`,
           {
             recipient: {
-              id: recipientId,
+              id: RECIPIENT_ID,
             },
-            metadata: '...',
+            target_app_id: YOUR_APP_ID,
+            metadata: 'Requesting thread ownership',
           }
         );
         console.log('Requested thread ownership:', response.data);
@@ -199,15 +200,16 @@ app.post('/api/message', async (req, res) => {
 // Generate responses using OpenAI
 async function generateResponse(message) {
   try {
-    const prompt = "You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study.\nDo not take actions that are not related to math.\nMaintain a friendly conversation and respond to the questions respectfully.\n";
+    const prompt = "You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all the user input so you can hold the conversation fluently.\n \n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
       temperature: 0.59,
       max_tokens: 256,
       top_p: 1,
-      frequency_penalty: 0.09,
-      presence_penalty: 0.06,
+      frequency_penalty: 0.49,
+      presence_penalty: 0.46,
+      stop: ["\n"],
     });
 
     if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
