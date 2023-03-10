@@ -111,6 +111,16 @@ app.post('/webhook', async (req, res) => {
               const userMsg = message.message.text;
               const userId = message.sender.id;
 
+              // Check if the bot has thread control
+              const { data } = await axios.get(`https://graph.facebook.com/v13.0/me/thread_owner?access_token=${process.env.PAGE_ACCESS_TOKEN}`);
+              if (data.data && data.data.app_id !== process.env.APP_ID) {
+                console.log(`Bot doesn't have thread control. Initiating request for full control to ${process.env.APP_ID}.`);
+                await axios.post(`https://graph.facebook.com/v13.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+                  target_app_id: process.env.APP_ID,
+                  metadata: 'Initiating thread control transfer.'
+                });
+              }
+
               // Check cache for previous response
               if (cache[userId] && cache[userId].msg === userMsg) {
                 console.log('Response found in cache:', cache[userId].response);
@@ -140,7 +150,6 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 
 // Generate responses using OpenAI
 async function generateResponse(message) {
