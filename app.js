@@ -162,11 +162,11 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// Requesting Thread Control in facebook
+// Thread Control Handler for facebook
 const requestThreadControl = async (userId) => {
   try {
     await axios.post(
-      `https://graph.facebook.com/v13.0/me/request_thread_control`,
+      `https://graph.facebook.com/v16.0/me/request_thread_control`,
       {
         "recipient": { "id": userId },
         "metadata": "Requesting thread control"
@@ -186,7 +186,7 @@ const requestThreadControl = async (userId) => {
 const releaseThreadControl = async (userId) => {
   try {
     await axios.post(
-      `https://graph.facebook.com/v13.0/me/pass_thread_control`,
+      `https://graph.facebook.com/v16.0/me/pass_thread_control`,
       {
         "recipient": { "id": userId },
         "target_app_id": process.env.FACEBOOK_APP_ID,
@@ -201,6 +201,25 @@ const releaseThreadControl = async (userId) => {
     console.log(`Released thread control from user ${userId}`);
   } catch (error) {
     console.error(`Error releasing thread control from user ${userId}:`, error.response.data);
+  }
+}
+
+const checkThreadControl = async (userId) => {
+  try {
+    const response = await axios.get(
+      `https://graph.facebook.com/v13.0/${userId}/thread_owner`,
+      {
+        params: {
+          "access_token": process.env.PAGE_ACCESS_TOKEN
+        }
+      }
+    );
+    const threadOwner = response.data.data[0];
+    console.log(`Thread control for user ${userId} is with ${threadOwner.name} (${threadOwner.id})`);
+    return threadOwner.id === process.env.FACEBOOK_APP_ID;
+  } catch (error) {
+    console.error(`Error checking thread control for user ${userId}:`, error.response.data);
+    return false;
   }
 }
 
