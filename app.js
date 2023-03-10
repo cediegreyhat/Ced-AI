@@ -103,13 +103,9 @@ app.post('/webhook', async (req, res) => {
           cache[userId] = { msg: userMsg, response };
           console.log('Sent response to standby event.');
         }
-
-        // Release thread control back to Facebook
-        await releaseThreadControl(userId);
-      } else {
-        res.sendStatus(200);
       }
     }
+
     // Check if the request is a regular message event
     else if (object === 'page' && entries) {
       for (const entry of entries) {
@@ -176,27 +172,6 @@ const requestThreadControl = async (userId) => {
     console.log(`Requested thread control from user ${userId}`);
   } catch (error) {
     console.error(`Error requesting thread control from user ${userId}:`, error.response.data);
-  }
-}
-
-const releaseThreadControl = async (userId) => {
-  try {
-    await axios.post(
-      `https://graph.facebook.com/v13.0/me/pass_thread_control`,
-      {
-        "recipient": { "id": userId },
-        "target_app_id": process.env.FACEBOOK_APP_ID,
-        "metadata": "Releasing thread control"
-      },
-      {
-        params: {
-          "access_token": process.env.PAGE_ACCESS_TOKEN
-        }
-      }
-    );
-    console.log(`Released thread control from user ${userId}`);
-  } catch (error) {
-    console.error(`Error releasing thread control from user ${userId}:`, error.response.data);
   }
 }
 
