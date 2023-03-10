@@ -65,7 +65,6 @@ function verifyRequestSignature(req, res, buf) {
   }
 }
 
-
 // Use the body-parser middleware and verify request signature
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
@@ -86,15 +85,21 @@ app.post('/webhook', async (req, res) => {
         const userMsg = (standby[0].message && standby[0].message.text) || standby[0].text;
         const userId = standby[0].sender.id;
 
-        // Send request to Facebook API to initiate a response if the user has sent a message or query in the standby event
-        await axios.post(`https://graph.facebook.com/v16.0/me/trigger_send_api?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
-          recipient: { id: userId },
-          trigger: 'user_initiated'
-        });
+        // Check cache for previous response
+        if (cache[userId] && cache[userId].msg === userMsg) {
+          console.log('Response found in cache:', cache[userId].response);
+          await sendResponse(userId, cache[userId].response);
+        } else {
+          // Get user message and send it to ChatGPT for processing
+          const response = await generateResponse(userMsg);
 
-        // Store the user message in cache for future use
-        cache[userId] = { msg: userMsg };
-        console.log('Stored message in cache:', cache[userId].msg);
+          // Send response back to user via Facebook Messenger API
+          await sendResponse(userId, response);
+
+          // Store response in cache
+          cache[userId] = { msg: userMsg, response };
+          console.log('Sent response to standby event.');
+        }
       } else {
         res.sendStatus(200);
       }
@@ -110,16 +115,6 @@ app.post('/webhook', async (req, res) => {
             if (message.message && message.message.text) {
               const userMsg = message.message.text;
               const userId = message.sender.id;
-
-              // Check if the bot has thread control
-              const { data } = await axios.get(`https://graph.facebook.com/v13.0/me/thread_owner?access_token=${process.env.PAGE_ACCESS_TOKEN}`);
-              if (data.data && data.data.app_id !== process.env.APP_ID) {
-                console.log(`Bot doesn't have thread control. Initiating request for full control to ${process.env.APP_ID}.`);
-                await axios.post(`https://graph.facebook.com/v16.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
-                  target_app_id: process.env.APP_ID,
-                  metadata: 'Initiating thread control transfer.'
-                });
-              }
 
               // Check cache for previous response
               if (cache[userId] && cache[userId].msg === userMsg) {
@@ -151,6 +146,30 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+// API Endpoint for OpenAI Communication
+app.post('/api/message', async (req, res) => {
+  try {
+    const { message } = req.body.object || {};
+
+    // Check if message is present in request body
+    if (!message) {
+      return res.status(400).json({ error: 'Message is missing from request body.' });
+    }
+
+    // Validate message
+    if (typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Invalid message format.' });
+    }
+
+    // Generate response
+    const response = await generateResponse(message);
+
+    res.json({ success: true, response });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to generate response.' });
+  }
+});
 
 // Generate responses using OpenAI
 async function generateResponse(message) {
