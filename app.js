@@ -90,7 +90,7 @@ app.post('/webhook', async (req, res) => {
             recipient: {
               id: recipientId,
             },
-            metadata: 'Requesting thread ownership for standby event',
+            metadata: '...',
           }
         );
         console.log('Requested thread ownership:', response.data);
