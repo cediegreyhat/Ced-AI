@@ -90,7 +90,6 @@ app.post('/webhook', async (req, res) => {
             recipient: {
               id: recipientId,
             },
-            target_app_id: process.env.PAGE_INBOX_APP_ID,
             metadata: 'Requesting thread ownership for standby event',
           }
         );
