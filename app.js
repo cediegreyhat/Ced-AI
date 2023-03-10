@@ -196,10 +196,13 @@ app.post('/api/message', async (req, res) => {
   }
 });
 
+// Define a global variable to store conversation history
+let conversationHistory = "";
+
 // Generate responses using OpenAI
 async function generateResponse(message) {
   try {
-    const prompt = "You are Riku my math teacher.\nI will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms.\nThis could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study.\nDo not take actions that are not related to math.\nMaintain a friendly conversation and respond to the questions respectfully.\nRemember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n";
+    const prompt = `You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n${conversationHistory}`;
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
@@ -216,6 +219,10 @@ async function generateResponse(message) {
     }
 
     const responseText = completions.data.choices[0].text.trim();
+    
+    // Append the user message and bot response to conversation history
+    conversationHistory += message + "\n" + responseText + "\n";
+    
     console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
