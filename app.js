@@ -68,6 +68,67 @@ function verifyRequestSignature(req, res, buf) {
 // Use the body-parser middleware and verify request signature
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 
+// Thread Control Handler for facebook
+const requestThreadControl = async (userId) => {
+  try {
+    await axios.post(
+      `https://graph.facebook.com/v16.0/me/request_thread_control`,
+      {
+        "recipient": { "id": userId },
+        "metadata": "Requesting thread control"
+      },
+      {
+        params: {
+          "access_token": process.env.PAGE_ACCESS_TOKEN
+        }
+      }
+    );
+    console.log(`Requested thread control from user ${userId}`);
+  } catch (error) {
+    console.error(`Error requesting thread control from user ${userId}:`, error.response.data);
+  }
+}
+
+const releaseThreadControl = async (userId) => {
+  try {
+    await axios.post(
+      `https://graph.facebook.com/v16.0/me/pass_thread_control`,
+      {
+        "recipient": { "id": userId },
+        "target_app_id": process.env.FACEBOOK_APP_ID,
+        "metadata": "Releasing thread control"
+      },
+      {
+        params: {
+          "access_token": process.env.PAGE_ACCESS_TOKEN
+        }
+      }
+    );
+    console.log(`Released thread control from user ${userId}`);
+  } catch (error) {
+    console.error(`Error releasing thread control from user ${userId}:`, error.response.data);
+  }
+}
+
+const checkThreadControl = async (userId) => {
+  try {
+    const response = await axios.get(
+      `https://graph.facebook.com/v16.0/${userId}/thread_owner`,
+      {
+        params: {
+          "access_token": process.env.PAGE_ACCESS_TOKEN
+        }
+      }
+    );
+    const threadOwner = response.data.data[0];
+    console.log(`Thread control for user ${userId} is with ${threadOwner.name} (${threadOwner.id})`);
+    return threadOwner.id === process.env.FACEBOOK_APP_ID;
+  } catch (error) {
+    console.error(`Error checking thread control for user ${userId}:`, error.response.data);
+    return false;
+  }
+}
+
 // Caching for faster processing
 const cache = {};
 
@@ -161,67 +222,6 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-// Thread Control Handler for facebook
-const requestThreadControl = async (userId) => {
-  try {
-    await axios.post(
-      `https://graph.facebook.com/v16.0/me/request_thread_control`,
-      {
-        "recipient": { "id": userId },
-        "metadata": "Requesting thread control"
-      },
-      {
-        params: {
-          "access_token": process.env.PAGE_ACCESS_TOKEN
-        }
-      }
-    );
-    console.log(`Requested thread control from user ${userId}`);
-  } catch (error) {
-    console.error(`Error requesting thread control from user ${userId}:`, error.response.data);
-  }
-}
-
-const releaseThreadControl = async (userId) => {
-  try {
-    await axios.post(
-      `https://graph.facebook.com/v16.0/me/pass_thread_control`,
-      {
-        "recipient": { "id": userId },
-        "target_app_id": process.env.FACEBOOK_APP_ID,
-        "metadata": "Releasing thread control"
-      },
-      {
-        params: {
-          "access_token": process.env.PAGE_ACCESS_TOKEN
-        }
-      }
-    );
-    console.log(`Released thread control from user ${userId}`);
-  } catch (error) {
-    console.error(`Error releasing thread control from user ${userId}:`, error.response.data);
-  }
-}
-
-const checkThreadControl = async (userId) => {
-  try {
-    const response = await axios.get(
-      `https://graph.facebook.com/v13.0/${userId}/thread_owner`,
-      {
-        params: {
-          "access_token": process.env.PAGE_ACCESS_TOKEN
-        }
-      }
-    );
-    const threadOwner = response.data.data[0];
-    console.log(`Thread control for user ${userId} is with ${threadOwner.name} (${threadOwner.id})`);
-    return threadOwner.id === process.env.FACEBOOK_APP_ID;
-  } catch (error) {
-    console.error(`Error checking thread control for user ${userId}:`, error.response.data);
-    return false;
-  }
-}
 
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
