@@ -76,14 +76,41 @@ app.post('/webhook', async (req, res) => {
   try {
     const { object, entry: entries, standby } = req.body;
 
+    // Function to check if a message is from the user
+    const isUserMessage = (message) => {
+      return message.message && message.message.text && !message.message.is_echo;
+    }
+
+    // Function to request thread ownership for a conversation
+    const requestThreadOwnership = async (recipientId) => {
+      try {
+        const response = await axios.post(
+          `https://graph.facebook.com/v16.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`,
+          {
+            recipient: {
+              id: recipientId,
+            },
+            target_app_id: process.env.PAGE_INBOX_APP_ID,
+            metadata: 'Requesting thread ownership for standby event',
+          }
+        );
+        console.log('Requested thread ownership:', response.data);
+      } catch (error) {
+        console.error('Error requesting thread ownership:', error);
+      }
+    }
+
     // Check if the request is a standby event
     if (object === 'page' && standby) {
       console.log('Received standby event:', standby);
 
       // Check if there are user queries/questions in the standby event
-      if (standby.length > 0 && ((standby[0].message && standby[0].message.text) || standby[0].text)) {
-        const userMsg = (standby[0].message && standby[0].message.text) || standby[0].text;
+      if (standby.some(isUserMessage)) {
+        const userMsg = standby.find(isUserMessage).message.text;
         const userId = standby[0].sender.id;
+
+        // Request thread ownership for the conversation
+        await requestThreadOwnership(userId);
 
         // Check cache for previous response
         if (cache[userId] && cache[userId].msg === userMsg) {
@@ -112,7 +139,7 @@ app.post('/webhook', async (req, res) => {
       // Add a check to make sure that messaging exists and is an array.
       if (Array.isArray(messaging)) {
         await Promise.all(messaging.map(async (message) => {
-          if (message.message && message.message.text) {
+          if (isUserMessage(message)) {
             const userMsg = message.message.text;
             const userId = message.sender.id;
 
