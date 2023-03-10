@@ -91,6 +91,13 @@ app.post('/webhook', async (req, res) => {
           console.log('Response found in cache:', cache[userId].response);
           await sendResponse(userId, cache[userId].response);
         } else {
+          // Send request to Facebook to move conversation to the main thread
+          await axios.post(`https://graph.facebook.com/v13.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+            recipient: { id: userId },
+            target_app_id: 263902037430900,
+            metadata: JSON.stringify({ action: 'switch_to_bot' })
+          });
+
           // Get user message and send it to ChatGPT for processing
           const response = await generateResponse(userMsg);
 
@@ -144,31 +151,6 @@ app.post('/webhook', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
-  }
-});
-
-// API Endpoint for OpenAI Communication
-app.post('/api/message', async (req, res) => {
-  try {
-    const { message } = req.body.object || {};
-
-    // Check if message is present in request body
-    if (!message) {
-      return res.status(400).json({ error: 'Message is missing from request body.' });
-    }
-
-    // Validate message
-    if (typeof message !== 'string' || message.trim().length === 0) {
-      return res.status(400).json({ error: 'Invalid message format.' });
-    }
-
-    // Generate response
-    const response = await generateResponse(message);
-
-    res.json({ success: true, response });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
 
