@@ -85,6 +85,9 @@ app.post('/webhook', async (req, res) => {
         const userMsg = (standby[0].message && standby[0].message.text) || standby[0].text;
         const userId = standby[0].sender.id;
 
+        // Request thread control from Facebook
+        await requestThreadControl(userId);
+
         // Check cache for previous response
         if (cache[userId] && cache[userId].msg === userMsg) {
           console.log('Response found in cache:', cache[userId].response);
@@ -100,6 +103,9 @@ app.post('/webhook', async (req, res) => {
           cache[userId] = { msg: userMsg, response };
           console.log('Sent response to standby event.');
         }
+
+        // Release thread control back to Facebook
+        await releaseThreadControl(userId);
       } else {
         res.sendStatus(200);
       }
@@ -121,6 +127,9 @@ app.post('/webhook', async (req, res) => {
                 console.log('Response found in cache:', cache[userId].response);
                 await sendResponse(userId, cache[userId].response);
               } else {
+                // Request thread control from Facebook
+                await requestThreadControl(userId);
+
                 // Get user message and send it to ChatGPT for processing
                 const response = await generateResponse(userMsg);
 
@@ -129,6 +138,9 @@ app.post('/webhook', async (req, res) => {
 
                 // Store response in cache
                 cache[userId] = { msg: userMsg, response };
+
+                // Release thread control back to Facebook
+                await releaseThreadControl(userId);
               }
             }
           }));
@@ -145,6 +157,48 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+// Requesting Thread Control in facebook
+const requestThreadControl = async (userId) => {
+  try {
+    await axios.post(
+      `https://graph.facebook.com/v13.0/me/request_thread_control`,
+      {
+        "recipient": { "id": userId },
+        "metadata": "Requesting thread control"
+      },
+      {
+        params: {
+          "access_token": process.env.PAGE_ACCESS_TOKEN
+        }
+      }
+    );
+    console.log(`Requested thread control from user ${userId}`);
+  } catch (error) {
+    console.error(`Error requesting thread control from user ${userId}:`, error.response.data);
+  }
+}
+
+const releaseThreadControl = async (userId) => {
+  try {
+    await axios.post(
+      `https://graph.facebook.com/v13.0/me/pass_thread_control`,
+      {
+        "recipient": { "id": userId },
+        "target_app_id": process.env.FACEBOOK_APP_ID,
+        "metadata": "Releasing thread control"
+      },
+      {
+        params: {
+          "access_token": process.env.PAGE_ACCESS_TOKEN
+        }
+      }
+    );
+    console.log(`Released thread control from user ${userId}`);
+  } catch (error) {
+    console.error(`Error releasing thread control from user ${userId}:`, error.response.data);
+  }
+}
 
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
