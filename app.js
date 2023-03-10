@@ -87,7 +87,7 @@ app.post('/webhook', async (req, res) => {
         const userId = standby[0].sender.id;
 
         // Send request to Facebook API to initiate a response if the user has sent a message or query in the standby event
-        await axios.post(`https://graph.facebook.com/v13.0/me/trigger_send_api?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+        await axios.post(`https://graph.facebook.com/v16.0/me/trigger_send_api?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
           recipient: { id: userId },
           trigger: 'user_initiated'
         });
@@ -115,7 +115,7 @@ app.post('/webhook', async (req, res) => {
               const { data } = await axios.get(`https://graph.facebook.com/v13.0/me/thread_owner?access_token=${process.env.PAGE_ACCESS_TOKEN}`);
               if (data.data && data.data.app_id !== process.env.APP_ID) {
                 console.log(`Bot doesn't have thread control. Initiating request for full control to ${process.env.APP_ID}.`);
-                await axios.post(`https://graph.facebook.com/v13.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+                await axios.post(`https://graph.facebook.com/v16.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
                   target_app_id: process.env.APP_ID,
                   metadata: 'Initiating thread control transfer.'
                 });
@@ -150,6 +150,7 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 // Generate responses using OpenAI
 async function generateResponse(message) {
