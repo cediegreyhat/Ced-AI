@@ -206,11 +206,11 @@ async function generateResponse(message) {
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
-      temperature: 0.69,
+      temperature: 0.71,
       max_tokens: 256,
       top_p: 1,
-      frequency_penalty: 0.09,
-      presence_penalty: 0.10,
+      frequency_penalty: 0.1,
+      presence_penalty: 0.1,
     });
 
     if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
