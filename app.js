@@ -85,7 +85,7 @@ app.post('/webhook', async (req, res) => {
     const requestThreadOwnership = async (recipientId) => {
       try {
         const response = await axios.post(
-          `https://graph.facebook.com/v16.0/me/pass_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`,
+          `https://graph.facebook.com/v16.0/me/take_thread_control?access_token=${process.env.PAGE_ACCESS_TOKEN}`,
           {
             recipient: {
               id: recipientId,
