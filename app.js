@@ -175,6 +175,27 @@ const requestThreadControl = async (userId) => {
   }
 }
 
+const releaseThreadControl = async (userId) => {
+  try {
+    await axios.post(
+      `https://graph.facebook.com/v13.0/me/pass_thread_control`,
+      {
+        "recipient": { "id": userId },
+        "target_app_id": process.env.FACEBOOK_APP_ID,
+        "metadata": "Releasing thread control"
+      },
+      {
+        params: {
+          "access_token": process.env.PAGE_ACCESS_TOKEN
+        }
+      }
+    );
+    console.log(`Released thread control from user ${userId}`);
+  } catch (error) {
+    console.error(`Error releasing thread control from user ${userId}:`, error.response.data);
+  }
+}
+
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
   try {
