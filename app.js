@@ -71,6 +71,9 @@ app.use(bodyParser.json({ verify: verifyRequestSignature }));
 // Caching for faster processing
 const cache = {};
 
+// Define a conversation object to keep track of context
+const conversations = {};
+
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
   try {
@@ -111,21 +114,20 @@ app.post('/webhook', async (req, res) => {
         // Request thread ownership for the conversation
         await requestThreadOwnership(userId);
 
-        // Check cache for previous response
-        if (cache[userId] && cache[userId].msg === userMsg) {
-          console.log('Response found in cache:', cache[userId].response);
-          await sendResponse(userId, cache[userId].response);
-        } else {
-          // Get user message and send it to ChatGPT for processing
-          const response = await generateResponse(userMsg);
+        // Get the conversation history for this user
+        const conversation = conversations[userId] || { context: {} };
 
-          // Send response back to user via Facebook Messenger API
-          await sendResponse(userId, response);
+        // Get user message and send it to ChatGPT for processing with context
+        const response = await generateResponse(userMsg, conversation.context);
 
-          // Store response in cache
-          cache[userId] = { msg: userMsg, response };
-          console.log('Sent response to standby event.');
-        }
+        // Send response back to user via Facebook Messenger API
+        await sendResponse(userId, response);
+
+        // Update the conversation history with the latest context
+        conversation.context = response.context;
+        conversations[userId] = conversation;
+
+        console.log('Sent response to standby event.');
       } else {
         res.sendStatus(200);
         console.log('No user query/message found in the standby event.');
@@ -142,31 +144,25 @@ app.post('/webhook', async (req, res) => {
             const userMsg = message.message.text;
             const userId = message.sender.id;
 
-            // Check cache for previous response
-            if (cache[userId] && cache[userId].msg === userMsg) {
-              console.log('Response found in cache:', cache[userId].response);
-              await sendResponse(userId, cache[userId].response);
-            } else {
-              // Get user message and send it to ChatGPT for processing
-              const response = await generateResponse(userMsg);
+            // Get the conversation history for this user
+            const conversation = conversations[userId] || { context: {} };
 
-              // Send response back to user via Facebook Messenger API
-              await sendResponse(userId, response);
+            // Get user message and send it to ChatGPT for processing with context
+            const response = await generateResponse(userMsg, conversation.context);
 
-              // Store response in cache
-              cache[userId] = { msg: userMsg, response };
-            }
+            // Send response back to user via Facebook Messenger API
+            await sendResponse(userId, response);
+
+            // Update the conversation history with the latest context
+            conversation.context = response.context;
+            conversations[userId] = conversation;
           }
         }));
       }
       res.sendStatus(200);
     }
-    else {
-      res.sendStatus(404);
-      return;
-    }
   } catch (error) {
-    console.error(error);
+    console.error('Error handling webhook:', error);
     res.sendStatus(500);
   }
 });
