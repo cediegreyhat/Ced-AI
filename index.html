@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riku AI™</title>
+    <title>ReCo AI™</title>
   </head>
   <style>
      /* CSS reset */
@@ -134,7 +134,7 @@ const appendMessage = (message, isBot = false) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const messageWithLinks = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   
-  div.innerHTML = isBot ? `Riku: ${messageWithLinks}` : `$ You: ${messageWithLinks}`;
+  div.innerHTML = isBot ? `ReCo: ${messageWithLinks}` : `$ You: ${messageWithLinks}`;
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
 };
