@@ -222,8 +222,8 @@ async function generateResponse(message, conversationHistory) {
       temperature: 0.5,
       max_tokens: isGreeting ? 64 : 256,
       top_p: 1,
-      frequency_penalty: 0.5,
-      presence_penalty: 0.5,
+      frequency_penalty: 0.05,
+      presence_penalty: 0.05,
     });
 
     // Check if API response is valid
@@ -245,7 +245,7 @@ async function generateResponse(message, conversationHistory) {
       return personalizedGreeting;
     }
 
-    return sanitizedResponse;
+    return sanitizedResponse + '.';
   } catch (error) {
     console.error(error);
     throw new Error(`Failed to generate response: ${error.message}`);
