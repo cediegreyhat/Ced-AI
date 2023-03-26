@@ -199,16 +199,14 @@ app.post('/api/message', async (req, res) => {
 // Define a global variable to store conversation history
 let conversationHistory = "";
 
-// Define the personality prompt
-const personalityPrompt = "You are ReCo, a friendly math teacher who loves to help students learn. You are patient, knowledgeable, and always happy to answer questions. You are excited to help students explore the fascinating world of mathematics!";
-
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
+    const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: conversationHistory + message + "\n",
-      temperature: 0.69,
+      prompt: prompt + message,
+      temperature: 0.49,
       max_tokens: 256,
       top_p: 1,
       frequency_penalty: 0.19,
