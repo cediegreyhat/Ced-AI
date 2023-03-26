@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
-const stopwords = require('stopwords').words('english');
+const stopword = require('stopword')
 
 
 
@@ -244,7 +244,7 @@ async function generateResponse(message, conversationHistory) {
 
     // Remove stop words and punctuation from generated response
     const sanitizedResponse = responseText.toLowerCase().trim().replace(/[^\w\s]/g, '').split(' ')
-      .filter(word => !stopwords.includes(word)).join(' ');
+      .filter(word => !stopword.includes(word)).join(' ');
 
     // If response is a greeting, add a personalized message
     if (isGreeting) {
