@@ -196,22 +196,21 @@ app.post('/api/message', async (req, res) => {
   }
 });
 
+// Define a global variable to store conversation history
+let conversationHistory = "";
+
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
-    const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n\n";
-
-    // Concatenate the conversation history into the prompt to maintain context
-    const fullPrompt = prompt + conversationHistory.join('\n');
-
+    const prompt = "You are Riku my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: fullPrompt + message,
-      temperature: 0.5,
+      prompt: prompt + message,
+      temperature: 0.69,
       max_tokens: 256,
       top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
+      frequency_penalty: 0.19,
+      presence_penalty: 0.36,
     });
 
     if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
@@ -219,8 +218,7 @@ async function generateResponse(message, conversationHistory) {
       throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
     }
 
-    // Only return the text of the response, without any additional context
-    const responseText = completions.data.choices[0].text.trim().replace(fullPrompt, '').replace(message, '').trim();
+    const responseText = completions.data.choices[0].text.trim();
     console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
