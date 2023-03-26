@@ -205,20 +205,17 @@ const stopwords = ['a', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with'
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
-    // Parse and sanitize user input query
-    const sanitizedMessage = message.toLowerCase().trim().replace(/[^\w\s]/g, '');
-
     // Define the prompt for OpenAI API
     const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam! How may I help you with your math questions today?\n\n";
 
     // Check if user input is a greeting
     const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
-    const isGreeting = greetings.some(greeting => sanitizedMessage.includes(greeting));
+    const isGreeting = greetings.some(greeting => message.toLowerCase().includes(greeting));
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: prompt + (isGreeting ? '' : sanitizedMessage),
+      prompt: prompt + (isGreeting ? '' : message),
       temperature: 0.5,
       max_tokens: isGreeting ? 64 : 256,
       top_p: 1,
@@ -241,10 +238,14 @@ async function generateResponse(message, conversationHistory) {
       return personalizedGreeting;
     }
 
-    return responseText + '.';
+    return responseText;
   } catch (error) {
     console.error(error);
-    throw new Error(`Failed to generate response: ${error.message}`);
+    if (error.response) {
+      throw new Error(`Failed to generate response. Status: ${error.response.status}. Data: ${JSON.stringify(error.response.data)}`);
+    } else {
+      throw new Error('Failed to generate response. Please try again later.');
+    }
   }
 }
 
