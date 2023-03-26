@@ -206,7 +206,7 @@ async function generateResponse(message, conversationHistory) {
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + message,
-      temperature: 0.69,
+      temperature: 0.49,
       max_tokens: 256,
       top_p: 1,
       frequency_penalty: 0.19,
@@ -218,7 +218,7 @@ async function generateResponse(message, conversationHistory) {
       throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
     }
 
-    const responseText = completions.data.choices[0].text.trim();
+    const responseText = completions.data.choices[0].text.replace(/There/g, '').trim();
     console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
