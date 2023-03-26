@@ -200,27 +200,30 @@ app.post('/api/message', async (req, res) => {
 
 // Define a global variables
 let conversationHistory = "";
-const stopwords = ['a', 'hello', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with', 'is', 'are'];
+const stopwords = ['a', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with', 'is', 'are'];
 
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
-    // Remove stop words from user query
-    const sanitizedMessage = message.toLowerCase().split(' ')
-      .filter(word => !stopwords.includes(word)).join(' ');
+    // Parse and sanitize user input query
+    const sanitizedMessage = message.toLowerCase().trim().replace(/[^\w\s]/g, '');
 
     // Define the prompt for OpenAI API
-    const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n\n";
+    const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam! How may I help you with your math questions today?\n\n";
+
+    // Check if user input is a greeting
+    const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
+    const isGreeting = greetings.some(greeting => sanitizedMessage.includes(greeting));
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: prompt + sanitizedMessage,
-      temperature: 0.49,
-      max_tokens: 256,
+      prompt: prompt + (isGreeting ? '' : sanitizedMessage),
+      temperature: 0.5,
+      max_tokens: isGreeting ? 64 : 256,
       top_p: 1,
-      frequency_penalty: 0.19,
-      presence_penalty: 0.36,
+      frequency_penalty: 0.5,
+      presence_penalty: 0.5,
     });
 
     // Check if API response is valid
@@ -231,11 +234,16 @@ async function generateResponse(message, conversationHistory) {
 
     // Extract response text from API response
     const responseText = completions.data.choices[0].text.trim();
-    console.log(`Generated response: ${responseText}`);
 
-    // Remove stop words from generated response
-    const sanitizedResponse = responseText.toLowerCase().split(' ')
+    // Remove stop words and punctuation from generated response
+    const sanitizedResponse = responseText.toLowerCase().trim().replace(/[^\w\s]/g, '').split(' ')
       .filter(word => !stopwords.includes(word)).join(' ');
+
+    // If response is a greeting, add a personalized message
+    if (isGreeting) {
+      const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
+      return personalizedGreeting;
+    }
 
     return sanitizedResponse;
   } catch (error) {
