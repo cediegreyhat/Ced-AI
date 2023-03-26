@@ -202,10 +202,13 @@ let conversationHistory = "";
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
+    const personalityPrompt = "My name is ReCo and I'm a friendly and knowledgeable math teacher. I'm here to help you with any math-related questions you may have. ";
+    const greetingPrompt = "Good day, sir/madam how may I help you?";
+
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: message,
-      temperature: 0.49,
+      prompt: personalityPrompt + greetingPrompt + conversationHistory + message,
+      temperature: 0.69,
       max_tokens: 256,
       top_p: 1,
       frequency_penalty: 0.19,
