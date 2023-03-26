@@ -235,17 +235,13 @@ async function generateResponse(message, conversationHistory) {
     // Extract response text from API response
     const responseText = completions.data.choices[0].text.trim();
 
-    // Remove stop words and punctuation from generated response
-    const sanitizedResponse = responseText.toLowerCase().trim().replace(/[^\w\s]/g, '').split(' ')
-      .filter(word => !stopwords.includes(word)).join(' ');
-
     // If response is a greeting, add a personalized message
     if (isGreeting) {
       const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
       return personalizedGreeting;
     }
 
-    return sanitizedResponse + '.';
+    return responseText;
   } catch (error) {
     console.error(error);
     throw new Error(`Failed to generate response: ${error.message}`);
