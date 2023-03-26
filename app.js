@@ -5,9 +5,9 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
-const stopwords = require('stopwords').english;
+const stopwords = require('stopwords');
 
-
+require('stopwords').english;
 
 
 const configuration = new Configuration({
