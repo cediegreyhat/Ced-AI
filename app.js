@@ -241,7 +241,7 @@ async function generateResponse(message, conversationHistory) {
       return personalizedGreeting;
     }
 
-    return sanitizedResponse + '.';
+    return responseText + '.';
   } catch (error) {
     console.error(error);
     throw new Error(`Failed to generate response: ${error.message}`);
