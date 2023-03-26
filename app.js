@@ -71,9 +71,6 @@ app.use(bodyParser.json({ verify: verifyRequestSignature }));
 // Caching for faster processing
 const cache = {};
 
-// Define a conversation object to keep track of context
-const conversations = {};
-
 // Webhook for receiving messages from Facebook Messenger
 app.post('/webhook', async (req, res) => {
   try {
@@ -114,20 +111,21 @@ app.post('/webhook', async (req, res) => {
         // Request thread ownership for the conversation
         await requestThreadOwnership(userId);
 
-        // Get the conversation history for this user
-        const conversation = conversations[userId] || { context: {} };
+        // Check cache for previous response
+        if (cache[userId] && cache[userId].msg === userMsg) {
+          console.log('Response found in cache:', cache[userId].response);
+          await sendResponse(userId, cache[userId].response);
+        } else {
+          // Get user message and send it to ChatGPT for processing
+          const response = await generateResponse(userMsg);
 
-        // Get user message and send it to ChatGPT for processing with context
-        const response = await generateResponse(userMsg, conversation.context);
+          // Send response back to user via Facebook Messenger API
+          await sendResponse(userId, response);
 
-        // Send response back to user via Facebook Messenger API
-        await sendResponse(userId, response);
-
-        // Update the conversation history with the latest context
-        conversation.context = response.context;
-        conversations[userId] = conversation;
-
-        console.log('Sent response to standby event.');
+          // Store response in cache
+          cache[userId] = { msg: userMsg, response };
+          console.log('Sent response to standby event.');
+        }
       } else {
         res.sendStatus(200);
         console.log('No user query/message found in the standby event.');
@@ -144,29 +142,34 @@ app.post('/webhook', async (req, res) => {
             const userMsg = message.message.text;
             const userId = message.sender.id;
 
-            // Get the conversation history for this user
-            const conversation = conversations[userId] || { context: {} };
+            // Check cache for previous response
+            if (cache[userId] && cache[userId].msg === userMsg) {
+              console.log('Response found in cache:', cache[userId].response);
+              await sendResponse(userId, cache[userId].response);
+            } else {
+              // Get user message and send it to ChatGPT for processing
+              const response = await generateResponse(userMsg);
 
-            // Get user message and send it to ChatGPT for processing with context
-            const response = await generateResponse(userMsg, conversation.context);
+              // Send response back to user via Facebook Messenger API
+              await sendResponse(userId, response);
 
-            // Send response back to user via Facebook Messenger API
-            await sendResponse(userId, response);
-
-            // Update the conversation history with the latest context
-            conversation.context = response.context;
-            conversations[userId] = conversation;
+              // Store response in cache
+              cache[userId] = { msg: userMsg, response };
+            }
           }
         }));
       }
       res.sendStatus(200);
     }
+    else {
+      res.sendStatus(404);
+      return;
+    }
   } catch (error) {
-    console.error('Error handling webhook:', error);
+    console.error(error);
     res.sendStatus(500);
   }
 });
-
 
 // API Endpoint for OpenAI Communication
 app.post('/api/message', async (req, res) => {
@@ -199,17 +202,10 @@ let conversationHistory = "";
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
-    // Only generate response if message is not empty
-    if (!message) return null;
-
-    // Clean up the message to ensure that it only contains proper characters
-    const cleanedMessage = message.replace(/[^\w\s]/gi, '');
-
-    // Generate the response
     const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: prompt + cleanedMessage,
+      prompt: prompt + message,
       temperature: 0.49,
       max_tokens: 256,
       top_p: 1,
@@ -222,25 +218,13 @@ async function generateResponse(message, conversationHistory) {
       throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
     }
 
-    // Clean up the response to ensure that it only contains proper characters
-    const responseText = completions.data.choices[0].text.trim().replace(/[^\w\s]/gi, '');
-
-    // Return null if the response is empty or only contains stop words
-    if (!responseText || isStopWord(responseText)) return null;
-
+    const responseText = completions.data.choices[0].text.trim();
     console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
     console.error(error);
     throw new Error(`Failed to generate response: ${error.message}`);
   }
-}
-
-// Check if the given text is a stop word
-function isStopWord(text) {
-  const stopWords = ["a", "an", "the", "and", "or", "but", "not", "is", "am", "are", "was", "were", "be", "being", "been", "have", "has", "had", "do", "does", "did", "will", "would", "shall", "should", "can", "could", "may", "might", "must", "ought"];
-  const words = text.split(/\s+/);
-  return words.every(word => stopWords.includes(word));
 }
 
 // Send response back to user via Facebook Messenger API
