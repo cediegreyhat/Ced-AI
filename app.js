@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
-const stopword = require('stopword')
+
 
 
 
@@ -199,6 +199,9 @@ app.post('/api/message', async (req, res) => {
   }
 });
 
+// Define a global variables
+const stopwords = ['a', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with', 'is', 'are'];
+
 // Define conversation history object
 const conversationHistory = {
   prompts: [],
@@ -244,7 +247,7 @@ async function generateResponse(message, conversationHistory) {
 
     // Remove stop words and punctuation from generated response
     const sanitizedResponse = responseText.toLowerCase().trim().replace(/[^\w\s]/g, '').split(' ')
-      .filter(word => !stopword.includes(word)).join(' ');
+      .filter(word => !stopwords.includes(word)).join(' ');
 
     // If response is a greeting, add a personalized message
     if (isGreeting) {
