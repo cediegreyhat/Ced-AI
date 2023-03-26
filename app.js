@@ -199,11 +199,10 @@ let conversationHistory = "";
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
-    const isPrompt = conversationHistory.length === 0;
-    const prompt = isPrompt ? "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation." : message;
+    const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: prompt,
+      prompt: prompt + message,
       temperature: 0.49,
       max_tokens: 256,
       top_p: 1,
@@ -216,7 +215,7 @@ async function generateResponse(message, conversationHistory) {
       throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
     }
 
-    const responseText = isPrompt ? "Greetings: Good day, sir/madam how may I help you?" : completions.data.choices[0].text.trim();
+    const responseText = completions.data.choices[0].text.trim();
     console.log(`Generated response: ${responseText}`);
     return responseText;
   } catch (error) {
