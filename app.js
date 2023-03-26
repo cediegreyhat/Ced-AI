@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
+const { stopwords } = require('stopwords');
 
 
 
@@ -202,10 +203,14 @@ let conversationHistory = "";
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
   try {
+    // Remove stop words from user query
+    const sanitizedMessage = message.toLowerCase().split(' ')
+      .filter(word => !stopwords.includes(word)).join(' ');
+
     const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam how may i help you?\n\n";
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: prompt + message,
+      prompt: prompt + sanitizedMessage,
       temperature: 0.49,
       max_tokens: 256,
       top_p: 1,
@@ -220,7 +225,12 @@ async function generateResponse(message, conversationHistory) {
 
     const responseText = completions.data.choices[0].text.trim();
     console.log(`Generated response: ${responseText}`);
-    return responseText;
+
+    // Remove stop words from generated response
+    const sanitizedResponse = responseText.toLowerCase().split(' ')
+      .filter(word => !stopwords.includes(word)).join(' ');
+
+    return sanitizedResponse;
   } catch (error) {
     console.error(error);
     throw new Error(`Failed to generate response: ${error.message}`);
