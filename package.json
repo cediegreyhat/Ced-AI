@@ -1,5 +1,5 @@
 {
-  "name": "ReCo-AI",
+  "name": "Reco",
   "version": "1.0.0",
   "description": "A chatbot using OpenAI and Machine Learning",
   "main": "app.js",
