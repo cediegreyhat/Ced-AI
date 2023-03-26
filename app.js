@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
+const stopwords = require('stopwords').words('english');
 
 
 
@@ -198,9 +199,11 @@ app.post('/api/message', async (req, res) => {
   }
 });
 
-// Define a global variables
-let conversationHistory = "";
-const stopwords = ['a', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with', 'is', 'are'];
+// Define conversation history object
+const conversationHistory = {
+  prompts: [],
+  responses: [],
+};
 
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
@@ -209,7 +212,11 @@ async function generateResponse(message, conversationHistory) {
     const sanitizedMessage = message.toLowerCase().trim().replace(/[^\w\s]/g, '');
 
     // Define the prompt for OpenAI API
-    const prompt = "You are ReCo my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.\n\nGreetings: Good day, sir/madam! How may I help you with your math questions today?\n\n";
+    const prompt = `You are ReCo, my math teacher. I will provide some mathematical equations or concepts, and it will be your job to explain them in easy-to-understand terms. This could include providing step-by-step instructions for solving a problem, demonstrating various techniques with visuals, or suggesting online resources for further study. Do not take actions that are not related to math. Maintain a friendly conversation and respond to the questions respectfully. Remember all user queries and context so you can maintain a persistent conversation.
+
+    ${conversationHistory.prompts.join('\n')}
+    
+    Greetings: Good day, sir/madam! How may I help you with your math questions today?\n\n`;
 
     // Check if user input is a greeting
     const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
@@ -217,7 +224,7 @@ async function generateResponse(message, conversationHistory) {
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
-      model: "text-davinci-003",
+      model: 'text-davinci-003',
       prompt: prompt + (isGreeting ? '' : sanitizedMessage),
       temperature: 0.5,
       max_tokens: isGreeting ? 64 : 256,
@@ -235,10 +242,28 @@ async function generateResponse(message, conversationHistory) {
     // Extract response text from API response
     const responseText = completions.data.choices[0].text.trim();
 
+    // Remove stop words and punctuation from generated response
+    const sanitizedResponse = responseText.toLowerCase().trim().replace(/[^\w\s]/g, '').split(' ')
+      .filter(word => !stopwords.includes(word)).join(' ');
+
     // If response is a greeting, add a personalized message
     if (isGreeting) {
       const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
       return personalizedGreeting;
+    }
+
+    // Update conversation history with user message and generated response
+    conversationHistory.prompts.push(sanitizedMessage);
+    conversationHistory.responses.push(responseText);
+
+    // Return response with relevant context
+    let context = '';
+    for (let i = conversationHistory.responses.length - 2; i >= 0; i--) {
+      const similarity = similarityScore(sanitizedMessage, conversationHistory.prompts[i]);
+      if (similarity > 0.5) {
+        context = `As we discussed earlier, you had asked me about "${conversationHistory.prompts[i]}". `;
+        break;
+      }
     }
 
     return responseText;
