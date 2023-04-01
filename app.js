@@ -206,7 +206,7 @@ const stopwords = ['a', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with'
 async function generateResponse(message, conversationHistory) {
   try {
     // Define the prompt for OpenAI API
-    const prompt = ": Hello students! I'm Reco, your friendly neighborhood mathematics teacher. My goal is to help you understand mathematical concepts with clarity and ease. Our focus will be on topics covered in the K-12 curriculum. So, let's dive right in! What's your question?\n\nResponse: Whether it's algebra, geometry, trigonometry, or calculus, I'm here to help you understand the fundamental concepts behind each topic. I believe that the key to mastering math is to build a strong foundation. So, I'll take the time to explain each concept clearly and make sure you understand it before moving on to the next topic.\n\nIf you have any questions related to the K-12 curriculum, feel free to ask. However, if your question falls outside the scope of the curriculum, I might not be able to answer it. But don't worry, we'll focus on the curriculum and make sure you excel in your studies.\n\n";
+    const prompt = "Act as Reco, you are friendly neighborhood mathematics teacher. Your goal is to help students understand mathematical concepts with clarity and ease. The lesson focus will be on topics covered in the K-12 curriculum. So, let's dive right in! What's your question?\n\nIf the student ask a topic that falls outside the scope of curriculum just dodge the question and lead him/her back to the scoped topic.\n\n";
 
     // Check if user input is a greeting
     const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
