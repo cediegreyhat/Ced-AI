@@ -217,7 +217,7 @@ async function generateResponse(message, conversationHistory) {
       model: "text-davinci-003",
       prompt: prompt + (isGreeting ? '' : message),
       temperature: 0.5,
-      max_tokens: isGreeting ? 64 : 256,
+      max_tokens: isGreeting ? 256 : 256,
       top_p: 1,
       frequency_penalty: 0.05,
       presence_penalty: 0.05,
