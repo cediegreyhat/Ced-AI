@@ -212,16 +212,12 @@ async function generateResponse(message, conversationHistory) {
     const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
     const isGreeting = greetings.some(greeting => message.toLowerCase().includes(greeting));
 
-    // Check if user input contains a math-related question
-    const mathRelatedKeywords = ['solve', 'calculate', 'what is', 'how many', 'how much', 'equation', 'expression', 'formula'];
-    const isMathRelated = mathRelatedKeywords.some(keyword => message.toLowerCase().includes(keyword));
-
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + (isGreeting ? '' : message),
       temperature: 0.5,
-      max_tokens: isGreeting ? 1000 : (isMathRelated ? 500 : 1000),
+      max_tokens: isGreeting ? 1024 : 1024,
       top_p: 1,
       frequency_penalty: 0.05,
       presence_penalty: 0.05,
@@ -242,12 +238,16 @@ async function generateResponse(message, conversationHistory) {
       return personalizedGreeting;
     }
 
+    return responseText;
   } catch (error) {
     console.error(error);
-    return "I'm sorry, I'm having trouble understanding your question. Can you please try again?";
+    if (error.response) {
+      throw new Error(`Failed to generate response. Status: ${error.response.status}. Data: ${JSON.stringify(error.response.data)}`);
+    } else {
+      throw new Error('Failed to generate response. Please try again later.');
+    }
   }
 }
-
 
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
