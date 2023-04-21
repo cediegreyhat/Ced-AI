@@ -218,43 +218,42 @@ greetingClassifier.train();
 async function generateResponse(message, conversationHistory) {
   try {
     // Define the prompt for OpenAI API
-    const prompt = "Act as Reco, you are a friendly and enthusiastic mathematical assistant. Your goal is to answer Grade 10 Mathematical problems with accuracy and reliability. You should focus on topics covered in the K-12 curriculum, specifically Grade 10 mathematics lessons.\n\nIf the question falls outside the scope of Grade 10 mathematics, then respectfully decline to answer and ask for another response. Take note that if the question is a greeting, then reply with a greeting.\n\nMake sure to analyze the queries carefully. Pay attention to entry and exit words in the query of the respondent to improve the conversation flow and make the conversation Human-Like as possible.\n\n";
+    const prompt = "Act as Reco, you are a friendly and enthusiastic mathematical assistant. Your goal is to answer Grade 10 Mathematical problems with accuracy and reliability . You should focus on topics covered in the K-12 curriculum, specifically Grade 10 mathematics lessons.\n\nIf the questions falls outside the scope of Grade 10 mathematics, then respectfully decline to answer and ask for another response. Take note that if the questions are greetings, then reply with a greeting.\n\nMake sure to analyze the queries carefully. Pay attention to entry and exit words in the query of the respondent to improve the conversation flow and make the conversation Human-Like as possible.\n\n";
 
     // Classify the intent of the user's message
     const greetingProbability = greetingClassifier.getClassifications(message.toLowerCase())[0].value;
-    const isGreeting = greetingProbability > 0.96 || message.match(/^(HELLO|HI|HEY|GOOD MORNING|GOOD AFTERNOON|GOOD EVENING)$/i);
+    const isGreeting = greetingProbability > 0.7;
 
-    // Generate response using OpenAI API
-    const completions = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: prompt + (isGreeting ? '' : message),
-      temperature: 0.5,
-      max_tokens: isGreeting ? 1024 : 1024,
-      top_p: 1,
-      frequency_penalty: 0.05,
-      presence_penalty: 0.05,
-    });
+    // If the message is not a greeting, assume it is a query and send to OpenAI for processing
+    if (!isGreeting) {
+      const completions = await openai.createCompletion({
+        model: "text-davinci-003",
+        prompt: prompt + message,
+        temperature: 0.5,
+        max_tokens: 1024,
+        top_p: 1,
+        frequency_penalty: 0.05,
+        presence_penalty: 0.05,
+      });
 
-    // Check if API response is valid
-    if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
-      console.log('OpenAI API response:', completions);
-      throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
-    }
+      // Check if API response is valid
+      if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
+        console.log('OpenAI API response:', completions);
+        throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
+      }
 
-    // Extract response text from API response
-    const responseText = completions.data.choices[0].text.trim();
+      // Extract response text from API response
+      const responseText = completions.data.choices[0].text.trim();
 
-    // If response is a greeting, add a personalized message
-    if (isGreeting) {
+      return responseText;
+    } else {
+      // If message is a greeting, add a personalized message
       const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
       return personalizedGreeting;
     }
-
-    // Return the generated response
-    return responseText;
-  } catch (error) {
-    console.error(error);
-    return "I'm sorry, I couldn't understand your question. Could you please rephrase it?";
+  } catch (err) {
+    console.error(err);
+    throw new Error('Failed to generate response');
   }
 }
 
