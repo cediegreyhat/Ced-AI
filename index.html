@@ -1,131 +1,118 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReCo AI™</title>
-    <link href="https://fonts.googleapis.com/css?family=VT323&display=swap" rel="stylesheet">
-  </head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReCo AI™</title>
   <style>
-     /* CSS reset */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        background-color: #1d1f21;
-        color: #ffffff;
-        font-family: 'VT323', monospace;
-        font-size: 1.25rem;
-      }
-
-      #console {
-        background-color: #1d1f21;
-        border: 2px solid #cc00ff;
-        padding: 1rem;
-        width: 90%;
-        max-width: 60rem;
-        height: 40rem;
-        margin: 2rem auto;
-        overflow: auto;
-        display: flex;
-        flex-direction: column;
-        border-radius: 8px;
-      }
-
-      .console-input {
-        color: #cc00ff;
-        font-weight: bold;
-        align-self: flex-end;
-        margin-bottom: 1rem;
-      }
-
-      .console-output {
-        color: #ffffff;
-        align-self: flex-start;
-        margin-bottom: 1rem;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-      }
-
-      .console-output-avatar {
-        width: 3rem;
-        height: 3rem;
-        margin-right: 1rem;
-        border-radius: 50%;
-      }
-
-      .console-output-text {
-        flex-grow: 1;
-      }
-
-      .console-error {
-        color: #ff008c;
-      }
-
-      #input-form {
-        display: flex;
-        margin: 0 auto;
-        width: 90%;
-        max-width: 60rem;
-        align-items: center;
-      }
-
-      #input-field {
-        background-color: #1d1f21;
-        color: #1d1f21;
-        border: none;
-        padding: 1rem;
-        flex-grow: 1;
-        border-top-left-radius: 8px;
-        border-bottom-left-radius: 8px;
-        border: 2px solid #cc00ff;
-      }
-
-      #submit-button {
-        background-color: #cc00ff;
-        color: #000000;
-        border: none;
-        padding: 1rem;
-        cursor: pointer;
-        margin-left: -2px;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
-        border: 2px solid #cc00ff;
-      }
-
-      #clear-button {
-        background-color: #1d1f21;
-        color: #ffffff;
-        border: none;
-        padding: 1rem;
-        cursor: pointer;
-        margin-left: 1rem;
-        border-radius: 8px;
-        border: 2px solid #cc00ff;
-      }
-
-      #clear-button:hover {
-        background-color: #cc00ff;
-        color: #000000;
-      }
-      /* Custom styles */
-      .console-output[data-author="Ced"] {
-        margin-left: 2rem;
-      }
-
-      #creator {
-        position: absolute;
-        bottom: 1rem;
-        left: 1rem;
-        font-size: 1rem;
-        color: #cc00ff;
-      }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    
+    #console {
+      background-color: #1E1E1E;
+      border: 2px solid #00ff41;
+      padding: 1rem;
+      width: 90%;
+      max-width: 60rem;
+      height: 40rem;
+      margin: 2rem auto;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .console-input {
+      color: #00ff41;
+      font-weight: bold;
+      align-self: flex-end;
+      margin-bottom: 1rem;
+    }
+    
+    .console-output {
+      color: #fff;
+      align-self: flex-start;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+    
+    .console-output-avatar {
+      width: 3rem;
+      height: 3rem;
+      margin-right: 1rem;
+      border-radius: 50%;
+    }
+    
+    .console-output-text {
+      flex-grow: 1;
+    }
+    
+    .console-error {
+      color: #ff0000;
+    }
+    
+    #input-form {
+      display: flex;
+      margin: 0 auto;
+      width: 90%;
+      max-width: 60rem;
+      align-items: center;
+    }
+    
+    #input-field {
+      background-color: #1E1E1E;
+      color: #fff;
+      border: none;
+      padding: 1rem;
+      flex-grow: 1;
+    }
+    
+    #submit-button {
+      background-color: #00ff41;
+      color: #000;
+      border: none;
+      padding: 1rem;
+      cursor: pointer;
+      margin-left: 1rem;
+    }
+    
+    #clear-button {
+      background-color: #00ff41;
+      color: #000;
+      border: none;
+      padding: 1rem;
+      cursor: pointer;
+      margin-left: 1rem;
+    }
+    
+    #clear-button:hover {
+      background-color: #0099cc;
+    }
+    
+    /* Custom styles */
+    .console-output[data-author="Riku"] {
+      margin-left: 2rem;
+    }
+    
+    #creator {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      font-size: 1rem;
+      color: #00ff41;
+    }
   </style>
+</head>
 <body>
   <div id="console"></div>
   <form id="input-form">
@@ -133,6 +120,7 @@
     <button type="submit" id="submit-button">Send</button>
     <button type="button" id="clear-button">Clear</button>
   </form>
+</body>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
   <script>
