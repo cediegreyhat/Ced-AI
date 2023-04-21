@@ -212,12 +212,16 @@ async function generateResponse(message, conversationHistory) {
     const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
     const isGreeting = greetings.some(greeting => message.toLowerCase().includes(greeting));
 
+    // Check if user input contains a math-related question
+    const mathRelatedKeywords = ['solve', 'calculate', 'what is', 'how many', 'how much', 'equation', 'expression', 'formula'];
+    const isMathRelated = mathRelatedKeywords.some(keyword => message.toLowerCase().includes(keyword));
+
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt + (isGreeting ? '' : message),
       temperature: 0.5,
-      max_tokens: isGreeting ? 1000 : 1000,
+      max_tokens: isGreeting ? 1000 : (isMathRelated ? 500 : 1000),
       top_p: 1,
       frequency_penalty: 0.05,
       presence_penalty: 0.05,
@@ -236,6 +240,12 @@ async function generateResponse(message, conversationHistory) {
     if (isGreeting) {
       const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
       return personalizedGreeting;
+    }
+
+    // If response is not related to math, ask for clarification
+    if (!isMathRelated) {
+      const clarificationMessage = `I'm sorry, I didn't quite catch that. Could you please rephrase your question or provide more details?`;
+      return clarificationMessage;
     }
 
     return responseText;
