@@ -242,22 +242,16 @@ async function generateResponse(message, conversationHistory) {
       return personalizedGreeting;
     }
 
-    // If response is not related to math, ask for clarification
-    if (!isMathRelated) {
-      const clarificationMessage = `I'm sorry, I didn't quite catch that. Could you please rephrase your question or provide more details?`;
-      return clarificationMessage;
+    // If response is related to math, return the response
+    if (isMathRelated) {
+      return responseText;
     }
-
-    return responseText;
   } catch (error) {
     console.error(error);
-    if (error.response) {
-      throw new Error(`Failed to generate response. Status: ${error.response.status}. Data: ${JSON.stringify(error.response.data)}`);
-    } else {
-      throw new Error('Failed to generate response. Please try again later.');
-    }
+    return "I'm sorry, I'm having trouble understanding your question. Can you please try again?";
   }
 }
+
 
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
