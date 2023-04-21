@@ -242,10 +242,6 @@ async function generateResponse(message, conversationHistory) {
       return personalizedGreeting;
     }
 
-    // If response is related to math, return the response
-    if (isMathRelated) {
-      return responseText;
-    }
   } catch (error) {
     console.error(error);
     return "I'm sorry, I'm having trouble understanding your question. Can you please try again?";
