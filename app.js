@@ -11,7 +11,6 @@ const { promisify } = require('util');
 
 
 
-
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -215,9 +214,7 @@ async function generateResponse(message, conversationHistory) {
 
     // Check if user input contains a math-related question
     const mathRelatedKeywords = ['solve', 'calculate', 'what is', 'how many', 'how much', 'equation', 'expression', 'formula'];
-    const inputWords = message.toLowerCase().split(' ');
-    const filteredWords = inputWords.filter(word => !stopwords.includes(word));
-    const isMathRelated = mathRelatedKeywords.some(keyword => filteredWords.includes(keyword));
+    const isMathRelated = mathRelatedKeywords.some(keyword => message.toLowerCase().includes(keyword));
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
