@@ -5,6 +5,10 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
+const { CosineSimilarity } = require('natural');
+const { WordTokenizer } = require('natural');
+const { stopword } = require('stopword');
+const { word2vec } = require('word2vec');
 
 
 
@@ -200,7 +204,16 @@ app.post('/api/message', async (req, res) => {
 
 // Define a global variables
 let conversationHistory = "";
-const stopwords = ['a', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with', 'is', 'are'];
+const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
+const mathRelatedKeywords = ['solve', 'calculate', 'what is', 'how many', 'how much', 'equation', 'expression', 'formula'];
+const wordTokenizer = new WordTokenizer();
+const similarity = new CosineSimilarity();
+let word2vecModel;
+
+// Load word2vec model
+(async () => {
+  word2vecModel = await word2vec.loadModel('./word2vec.bin');
+})();
 
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
@@ -208,13 +221,19 @@ async function generateResponse(message, conversationHistory) {
     // Define the prompt for OpenAI API
     const prompt = "Act as Reco, you are a friendly and enthusiastic mathematical assistant. Your goal is to answer Grade 10 Mathematical problems with accuracy and reliability . You should focus on topics covered in the K-12 curriculum, specifically Grade 10 mathematics lessons.\n\nIf the questions falls outside the scope of Grade 10 mathematics, then respectfully decline to answer and ask for another response. Take note that if the questions are greetings, then reply with a greeting.\n\nMake sure to analyze the queries carefully. Pay attention to entry and exit words in the query of the respondent to improve the conversation flow and make the conversation Human-Like as possible.\n\n";
 
+    // Tokenize user input and remove stop words
+    const tokenizedMessage = stopword.removeStopwords(wordTokenizer.tokenize(message.toLowerCase()), stopwords);
+
     // Check if user input is a greeting
-    const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
-    const isGreeting = greetings.some(greeting => message.toLowerCase().includes(greeting));
+    const isGreeting = greetings.some(greeting => tokenizedMessage.includes(greeting));
 
     // Check if user input contains a math-related question
-    const mathRelatedKeywords = ['solve', 'calculate', 'what is', 'how many', 'how much', 'equation', 'expression', 'formula'];
-    const isMathRelated = mathRelatedKeywords.some(keyword => message.toLowerCase().includes(keyword));
+    const isMathRelated = mathRelatedKeywords.some(keyword => tokenizedMessage.includes(keyword));
+
+    // If user input contains both greeting and math-related question, prioritize math-related question
+    if (isGreeting && isMathRelated) {
+      isGreeting = false;
+    }
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
