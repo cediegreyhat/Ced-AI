@@ -1,9 +1,11 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReCo AI™</title>
+    <link href="https://fonts.googleapis.com/css?family=VT323&display=swap" rel="stylesheet">
   </head>
   <style>
      /* CSS reset */
@@ -14,14 +16,15 @@
       }
 
       body {
-        background-color: #000000;
+        background-color: #1d1f21;
         color: #ffffff;
-        font-family: 'Courier New', Courier, monospace;
+        font-family: 'VT323', monospace;
+        font-size: 1.25rem;
       }
 
       #console {
-        background-color: #000000;
-        border: 2px solid #00ff41;
+        background-color: #1d1f21;
+        border: 2px solid #cc00ff;
         padding: 1rem;
         width: 90%;
         max-width: 60rem;
@@ -30,10 +33,11 @@
         overflow: auto;
         display: flex;
         flex-direction: column;
+        border-radius: 8px;
       }
 
       .console-input {
-        color: #00ff41;
+        color: #cc00ff;
         font-weight: bold;
         align-self: flex-end;
         margin-bottom: 1rem;
@@ -60,7 +64,7 @@
       }
 
       .console-error {
-        color: #ff0000;
+        color: #ff008c;
       }
 
       #input-form {
@@ -72,36 +76,45 @@
       }
 
       #input-field {
-        background-color: #000000;
-        color: #ffffff;
+        background-color: #1d1f21;
+        color: #1d1f21;
         border: none;
         padding: 1rem;
         flex-grow: 1;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        border: 2px solid #cc00ff;
       }
 
       #submit-button {
-        background-color: #00ff41;
+        background-color: #cc00ff;
         color: #000000;
         border: none;
         padding: 1rem;
         cursor: pointer;
-        margin-left: 1rem;
+        margin-left: -2px;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border: 2px solid #cc00ff;
       }
 
       #clear-button {
-        background-color: #00ff41;
-        color: #000000;
+        background-color: #1d1f21;
+        color: #ffffff;
         border: none;
         padding: 1rem;
         cursor: pointer;
         margin-left: 1rem;
+        border-radius: 8px;
+        border: 2px solid #cc00ff;
       }
 
       #clear-button:hover {
-        background-color: #0099cc;
+        background-color: #cc00ff;
+        color: #000000;
       }
       /* Custom styles */
-      .console-output[data-author="Riku"] {
+      .console-output[data-author="Ced"] {
         margin-left: 2rem;
       }
 
@@ -110,7 +123,7 @@
         bottom: 1rem;
         left: 1rem;
         font-size: 1rem;
-        color: #00ff41;
+        color: #cc00ff;
       }
   </style>
 <body>
