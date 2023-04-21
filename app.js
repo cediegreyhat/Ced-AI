@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
+const wordEmbeddings = require('word2vec');
 
 
 
@@ -214,7 +215,9 @@ async function generateResponse(message, conversationHistory) {
 
     // Check if user input contains a math-related question
     const mathRelatedKeywords = ['solve', 'calculate', 'what is', 'how many', 'how much', 'equation', 'expression', 'formula'];
-    const isMathRelated = mathRelatedKeywords.some(keyword => message.toLowerCase().includes(keyword));
+    const inputWords = message.toLowerCase().split(' ');
+    const filteredWords = inputWords.filter(word => !stopwords.includes(word));
+    const isMathRelated = mathRelatedKeywords.some(keyword => filteredWords.includes(keyword));
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
