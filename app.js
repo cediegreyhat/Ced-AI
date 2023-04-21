@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
-const wordEmbeddings = require('word2vec');
+
 
 
 
