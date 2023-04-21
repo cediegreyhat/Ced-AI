@@ -224,40 +224,36 @@ async function generateResponse(message, conversationHistory) {
     const greetingProbability = greetingClassifier.getClassifications(message.toLowerCase())[0].value;
     const isGreeting = greetingProbability > 0.7;
 
-    // Generate response using OpenAI API
-    const completions = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: prompt + (isGreeting ? '' : message),
-      temperature: 0.5,
-      max_tokens: isGreeting ? 1024 : 1024,
-      top_p: 1,
-      frequency_penalty: 0.05,
-      presence_penalty: 0.05,
-    });
+    // Send query directly to OpenAI if it does not include a greeting
+    if (!isGreeting) {
+      const completions = await openai.createCompletion({
+        model: "text-davinci-003",
+        prompt: prompt + message,
+        temperature: 0.5,
+        max_tokens: 1024,
+        top_p: 1,
+        frequency_penalty: 0.05,
+        presence_penalty: 0.05,
+      });
 
-    // Check if API response is valid
-    if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
-      console.log('OpenAI API response:', completions);
-      throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
+      // Check if API response is valid
+      if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
+        console.log('OpenAI API response:', completions);
+        throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
+      }
+
+      // Extract response text from API response
+      const responseText = completions.data.choices[0].text.trim();
+
+      return responseText;
     }
-
-    // Extract response text from API response
-    const responseText = completions.data.choices[0].text.trim();
 
     // If response is a greeting, add a personalized message
-    if (isGreeting) {
-      const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
-      return personalizedGreeting;
-    }
-
-    return responseText;
+    const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
+    return personalizedGreeting;
   } catch (error) {
     console.error(error);
-    if (error.response) {
-      throw new Error(`Failed to generate response. Status: ${error.response.status}. Data: ${JSON.stringify(error.response.data)}`);
-    } else {
-      throw new Error('Failed to generate response. Please try again later.');
-    }
+    return "Oops, something went wrong. Could you please try again later?";
   }
 }
 
