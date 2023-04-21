@@ -5,6 +5,9 @@ const crypto = require('crypto');
 const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
+const natural = require('natural');
+const tokenizer = new natural.WordTokenizer();
+const TfIdf = natural.TfIdf;
 
 
 
@@ -212,6 +215,12 @@ async function generateResponse(message, conversationHistory) {
     const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
     const isGreeting = greetings.some(greeting => message.toLowerCase().includes(greeting));
 
+    // Preprocess user input and generate embeddings
+    const tokenizedMessage = tokenizer.tokenize(message.toLowerCase()).filter(token => !stopwords.includes(token));
+    const tfidf = new TfIdf();
+    tfidf.addDocument(tokenizedMessage);
+    const embeddings = tfidf.documents[0];
+
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
       model: "text-davinci-003",
@@ -221,6 +230,7 @@ async function generateResponse(message, conversationHistory) {
       top_p: 1,
       frequency_penalty: 0.05,
       presence_penalty: 0.05,
+      embeddings: embeddings
     });
 
     // Check if API response is valid
