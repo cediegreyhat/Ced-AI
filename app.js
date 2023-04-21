@@ -6,8 +6,7 @@ const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 const { promisify } = require('util');
 const natural = require('natural');
-const tokenizer = new natural.WordTokenizer();
-const TfIdf = natural.TfIdf;
+
 
 
 
@@ -204,6 +203,16 @@ app.post('/api/message', async (req, res) => {
 // Define a global variables
 let conversationHistory = "";
 const stopwords = ['a', 'an', 'the', 'in', 'on', 'at', 'to', 'of', 'for', 'with', 'is', 'are'];
+const greetingClassifier = new natural.BayesClassifier();
+
+// Train the greeting classifier
+greetingClassifier.addDocument('hello', 'greeting');
+greetingClassifier.addDocument('hi', 'greeting');
+greetingClassifier.addDocument('hey', 'greeting');
+greetingClassifier.addDocument('good morning', 'greeting');
+greetingClassifier.addDocument('good afternoon', 'greeting');
+greetingClassifier.addDocument('good evening', 'greeting');
+greetingClassifier.train();
 
 // Generate responses using OpenAI
 async function generateResponse(message, conversationHistory) {
@@ -211,15 +220,9 @@ async function generateResponse(message, conversationHistory) {
     // Define the prompt for OpenAI API
     const prompt = "Act as Reco, you are a friendly and enthusiastic mathematical assistant. Your goal is to answer Grade 10 Mathematical problems with accuracy and reliability . You should focus on topics covered in the K-12 curriculum, specifically Grade 10 mathematics lessons.\n\nIf the questions falls outside the scope of Grade 10 mathematics, then respectfully decline to answer and ask for another response. Take note that if the questions are greetings, then reply with a greeting.\n\nMake sure to analyze the queries carefully. Pay attention to entry and exit words in the query of the respondent to improve the conversation flow and make the conversation Human-Like as possible.\n\n";
 
-    // Check if user input is a greeting
-    const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
-    const isGreeting = greetings.some(greeting => message.toLowerCase().includes(greeting));
-
-    // Preprocess user input and generate embeddings
-    const tokenizedMessage = tokenizer.tokenize(message.toLowerCase()).filter(token => !stopwords.includes(token));
-    const tfidf = new TfIdf();
-    tfidf.addDocument(tokenizedMessage);
-    const embeddings = tfidf.documents[0];
+    // Classify the intent of the user's message
+    const greetingProbability = greetingClassifier.getClassifications(message.toLowerCase())[0].value;
+    const isGreeting = greetingProbability > 0.7;
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
@@ -230,7 +233,6 @@ async function generateResponse(message, conversationHistory) {
       top_p: 1,
       frequency_penalty: 0.05,
       presence_penalty: 0.05,
-      embeddings: embeddings
     });
 
     // Check if API response is valid
