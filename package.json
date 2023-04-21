@@ -1,5 +1,5 @@
 {
-  "name": "Reco",
+  "name": "reco",
   "version": "1.0.0",
   "description": "A chatbot using OpenAI and Machine Learning",
   "main": "app.js",
@@ -10,7 +10,6 @@
   "author": "Cediegreyhat",
   "license": "ISC",
   "dependencies": {
-    "dialogflow-fulfillment": "^0.6.1",
     "util": "^0.12.5",
     "dotenv": "^16.0.3",
     "openai": "^3.2.1",
