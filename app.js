@@ -222,7 +222,7 @@ async function generateResponse(message, conversationHistory) {
 
     // Classify the intent of the user's message
     const greetingProbability = greetingClassifier.getClassifications(message.toLowerCase())[0].value;
-    const isGreeting = greetingProbability > 0.7 || message.match(/^(HELLO|HI|HEY|GOOD MORNING|GOOD AFTERNOON|GOOD EVENING)$/i);
+    const isGreeting = greetingProbability > 0.96 || message.match(/^(HELLO|HI|HEY|GOOD MORNING|GOOD AFTERNOON|GOOD EVENING)$/i);
 
     // Generate response using OpenAI API
     const completions = await openai.createCompletion({
