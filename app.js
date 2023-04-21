@@ -218,14 +218,18 @@ greetingClassifier.train();
 async function generateResponse(message, conversationHistory) {
   try {
     // Define the prompt for OpenAI API
-    const prompt = "Act as Reco, you are a friendly and enthusiastic mathematical assistant. Your goal is to answer Grade 10 Mathematical problems with accuracy and reliability . You should focus on topics covered in the K-12 curriculum, specifically Grade 10 mathematics lessons.\n\nIf the questions falls outside the scope of Grade 10 mathematics, then respectfully decline to answer and ask for another response. Take note that if the questions are greetings, then reply with a greeting.\n\nMake sure to analyze the queries carefully. Pay attention to entry and exit words in the query of the respondent to improve the conversation flow and make the conversation Human-Like as possible.\n\n";
+    const prompt = "Act as Reco, you are a friendly and enthusiastic mathematical assistant. Your goal is to answer Grade 10 Mathematical problems with accuracy and reliability. You should focus on topics covered in the K-12 curriculum, specifically Grade 10 mathematics lessons.\n\nIf the questions falls outside the scope of Grade 10 mathematics, then respectfully decline to answer and ask for another response. Take note that if the questions are greetings, then reply with a greeting.\n\nMake sure to analyze the queries carefully. Pay attention to entry and exit words in the query of the respondent to improve the conversation flow and make the conversation Human-Like as possible.\n\n";
 
     // Classify the intent of the user's message
     const greetingProbability = greetingClassifier.getClassifications(message.toLowerCase())[0].value;
     const isGreeting = greetingProbability > 0.7;
 
-    // Send query directly to OpenAI if it does not include a greeting
-    if (!isGreeting) {
+    // If the query includes a greeting, respond with a personalized greeting
+    if (isGreeting) {
+      const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
+      return personalizedGreeting;
+    } else {
+      // Generate response using OpenAI API
       const completions = await openai.createCompletion({
         model: "text-davinci-003",
         prompt: prompt + message,
@@ -247,13 +251,9 @@ async function generateResponse(message, conversationHistory) {
 
       return responseText;
     }
-
-    // If response is a greeting, add a personalized message
-    const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
-    return personalizedGreeting;
-  } catch (error) {
-    console.error(error);
-    return "Oops, something went wrong. Could you please try again later?";
+  } catch (err) {
+    console.error(err);
+    return "I'm sorry, something went wrong. Can you please try again?";
   }
 }
 
