@@ -225,41 +225,38 @@ async function generateResponse(message, conversationHistory) {
     const isGreeting = greetingProbability > 0.7;
 
     // Generate response using OpenAI API
-    const completions = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: prompt + (isGreeting ? '' : message),
-      temperature: 0.5,
-      max_tokens: isGreeting ? 1024 : 1024,
-      top_p: 1,
-      frequency_penalty: 0.05,
-      presence_penalty: 0.05,
-    });
-
-    // Check if API response is valid
-    if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
-      console.log('OpenAI API response:', completions);
-      throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
-    }
-
-    // Extract response text from API response
-    const responseText = completions.data.choices[0].text.trim();
-
-    // If response is a greeting, add a personalized message
+    let responseText = '';
     if (isGreeting) {
-      const personalizedGreeting = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
-      return personalizedGreeting;
-    }
+      // If message is a greeting, add a personalized message
+      responseText = `Hello! I'm ReCo, your math teacher. How can I assist you with your math questions today?`;
+    } else {
+      // If message is not a greeting, send to OpenAI for response
+      const completions = await openai.createCompletion({
+        model: "text-davinci-003",
+        prompt: prompt + message,
+        temperature: 0.5,
+        max_tokens: 1024,
+        top_p: 1,
+        frequency_penalty: 0.05,
+        presence_penalty: 0.05,
+      });
 
+      // Check if API response is valid
+      if (!completions || completions.status !== 200 || !completions.data || !completions.data.choices || !completions.data.choices[0]) {
+        console.log('OpenAI API response:', completions);
+        throw new Error(`Failed to generate response. Status: ${completions.status}. Data: ${JSON.stringify(completions.data)}`);
+      }
+
+      // Extract response text from API response
+      responseText = completions.data.choices[0].text.trim();
+    }
     return responseText;
   } catch (error) {
     console.error(error);
-    if (error.response) {
-      throw new Error(`Failed to generate response. Status: ${error.response.status}. Data: ${JSON.stringify(error.response.data)}`);
-    } else {
-      throw new Error('Failed to generate response. Please try again later.');
-    }
+    return "Sorry, I'm having trouble processing your request. Please try again later.";
   }
 }
+
 
 // Send response back to user via Facebook Messenger API
 async function sendResponse(recipientId, response) {
