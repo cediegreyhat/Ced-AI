@@ -225,7 +225,7 @@ async function generateResponse(message, conversationHistory) {
     const isGreeting = greetingProbability > 0.7;
 
     // If the message is not a greeting, assume it is a query and send to OpenAI for processing
-    if (!isGreeting) {
+    if (!isGreeting || !message.toLowerCase().startsWith("hello") || !message.toLowerCase().startsWith("hi") || !message.toLowerCase().startsWith("hey") || !message.toLowerCase().startsWith("good morning") || !message.toLowerCase().startsWith("good afternoon") || !message.toLowerCase().startsWith("good evening")) {
       const completions = await openai.createCompletion({
         model: "text-davinci-003",
         prompt: prompt + message,
